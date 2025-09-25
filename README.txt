@@ -1,5 +1,5 @@
 скачиваем https://github.com/coreybutler/nvm-windows/releases
-zapret libo vpn i dalshe:
+
 perezapusi powershell
 nvm install 20.19.4
 nvm use 20.19.4
