@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-  optionText: { fontSize: 16, color: "#fff", flex: 1 },
+  optionText: { fontSize: 16, color: "#fff", flex: 1},
   resultContainer: { padding: 40, alignItems: "center" },
   resultTitle: {
     fontSize: 28,
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
-  restartButton: { width: "100%", marginBottom: 16 },
+  restartButton: { width: "100%", marginBottom: 16, marginTop: 16 },
   restartGradient: {
     padding: 16,
     borderRadius: 12,

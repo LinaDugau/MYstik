@@ -45,7 +45,7 @@ export default function ProfileScreen() {
     try {
       await cancelSubscription();
       setSelectedCardBack("purple");
-      Alert.alert("Успех", "Подписка успешно отменена");
+      Alert.alert("Успешно!", "Премиум подписка отменена");
     } catch (error) {
       Alert.alert("Ошибка", "Не удалось отменить подписку. Попробуйте снова.");
       console.error("Cancel subscription error:", error);
