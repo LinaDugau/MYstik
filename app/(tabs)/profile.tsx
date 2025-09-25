@@ -17,7 +17,7 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ProfileScreen() {
-  const { isPremium, setCardBack } = useSubscription();
+  const { isPremium, setCardBack, cancelSubscription } = useSubscription();
   const { birthDate, clearUserData } = useUser();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState("purple");
@@ -39,6 +39,17 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      await cancelSubscription();
+      setSelectedCardBack("purple");
+      Alert.alert("Успех", "Подписка успешно отменена");
+    } catch (error) {
+      Alert.alert("Ошибка", "Не удалось отменить подписку. Попробуйте снова.");
+      console.error("Cancel subscription error:", error);
+    }
   };
 
   const supportContacts = [
@@ -136,10 +147,7 @@ export default function ProfileScreen() {
                 "Вы уверены, что хотите отменить подписку?",
                 [
                   { text: "Нет", style: "cancel" },
-                  { text: "Да", onPress: () => {
-                    setSelectedCardBack("purple");
-                    setCardBack("purple");
-                  } },
+                  { text: "Да", onPress: handleCancelSubscription },
                 ]
               );
             }}

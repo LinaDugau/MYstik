@@ -42,11 +42,43 @@ export default function TarotScreen() {
     red: ["#d32f2f", "#f44336"],
   };
 
-  const startReading = (spread: TarotSpread) => {
-    if (spread.isPremium && !isPremium) {
+ const startReading = (spread: TarotSpread) => {
+  if (spread.isPremium && !isPremium) {
+    Alert.alert(
+      "Премиум функция",
+      "Этот расклад доступен только по подписке",
+      [
+        { text: "Отмена", style: "cancel" },
+        { text: "Подписка", onPress: () => router.push("/subscription") },
+      ]
+    );
+    return;
+  }
+
+  if (spread.id === "daily") {
+    if (dailyCard && !isNewDay) {
+      setCurrentReading({
+        spread,
+        cards: [dailyCard],
+      });
+      setFlippedCards([false]);
+      flipAnimations[0] = new Animated.Value(0);
+    } else if (isNewDay) {
+      const newCard = drawDailyCard();
+      if (newCard) {
+        setCurrentReading({
+          spread,
+          cards: [newCard],
+        });
+        setFlippedCards([false]); 
+        flipAnimations[0] = new Animated.Value(1);
+      }
+    }
+  } else {
+    if (!canRead && !isPremium) {
       Alert.alert(
-        "Премиум функция",
-        "Этот расклад доступен только по подписке",
+        "Лимит исчерпан",
+        `Вы использовали ${readingsToday} из 3 бесплатных гаданий сегодня. Оформите подписку для безлимитного доступа.`,
         [
           { text: "Отмена", style: "cancel" },
           { text: "Подписка", onPress: () => router.push("/subscription") },
@@ -55,50 +87,24 @@ export default function TarotScreen() {
       return;
     }
 
-    if (spread.id === "daily") {
-      if (dailyCard && !isNewDay) {
-        setCurrentReading({
-          spread,
-          cards: [dailyCard]
-        });
-        setFlippedCards([true]);
-        flipAnimations[0] = new Animated.Value(1);
-      } else if (isNewDay) {
-        const newCard = drawDailyCard();
-        if (newCard) {
-          setCurrentReading({
-            spread,
-            cards: [newCard]
-          });
-          setFlippedCards([false]);
-          flipAnimations[0] = new Animated.Value(0);
-        }
-      }
-    } else {
-      if (!canRead && !isPremium) {
-        Alert.alert(
-          "Лимит исчерпан",
-          `Вы использовали ${readingsToday} из 3 бесплатных гаданий сегодня. Оформите подписку для безлимитного доступа.`,
-          [
-            { text: "Отмена", style: "cancel" },
-            { text: "Подписка", onPress: () => router.push("/subscription") },
-          ]
-        );
-        return;
-      }
-      
-      performReading();
-      const cards = getRandomCards(spread.cardCount);
-      setCurrentReading({ spread, cards });
-      setFlippedCards(new Array(spread.cardCount).fill(false));
-      flipAnimations.length = 0;
-      for (let i = 0; i < spread.cardCount; i++) {
-        flipAnimations[i] = new Animated.Value(0);
-      }
+    performReading();
+    const cards = getRandomCards(spread.cardCount);
+    setCurrentReading({ spread, cards });
+    setFlippedCards(new Array(spread.cardCount).fill(true)); 
+    flipAnimations.length = 0;
+    for (let i = 0; i < spread.cardCount; i++) {
+      flipAnimations[i] = new Animated.Value(0);
+      Animated.timing(flipAnimations[i], {
+        toValue: 1,
+        duration: 600,
+        delay: i * 200, 
+        useNativeDriver: true,
+      }).start();
     }
-    
-    setCurrentView('reading');
-  };
+  }
+
+  setCurrentView("reading");
+};
 
   const flipCard = (index: number) => {
     const newFlippedCards = [...flippedCards];
