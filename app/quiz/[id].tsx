@@ -57,6 +57,7 @@ export default function QuizScreen() {
       <ScrollView style={styles.container}>
         <View style={styles.resultContainer}>
           <Text style={styles.resultTitle}>{quiz.title}</Text>
+          <Text style={styles.resultDescription}>{quiz.resultDescription(result)}</Text>
 
           {quiz.id === "strengths" && (
             <>
