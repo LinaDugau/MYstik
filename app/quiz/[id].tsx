@@ -29,9 +29,9 @@ export default function QuizScreen() {
         <Crown size={64} color="#ffd700" />
         <Text style={styles.lockedTitle}>Только для премиум</Text>
         <Text style={styles.lockedText}>
-          Этот тест доступен только подписчикам. Оформите подписку и узнайте больше о себе!
+          Этот тест доступен только подписчикам. Оформите подписку и узнайте
+          больше о себе!
         </Text>
-
         <TouchableOpacity
           style={styles.unlockButton}
           onPress={() => router.push("/subscription")}
@@ -43,8 +43,10 @@ export default function QuizScreen() {
             <Text style={styles.unlockText}>Открыть доступ</Text>
           </LinearGradient>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backText}>Назад</Text>
         </TouchableOpacity>
       </View>
@@ -56,44 +58,59 @@ export default function QuizScreen() {
     return (
       <ScrollView style={styles.container}>
         <View style={styles.resultContainer}>
-          <Text style={styles.resultTitle}>{quiz.title}</Text>
+              <Text style={styles.resultTitle}>{quiz.title}</Text>
 
           {quiz.id === "strengths" && (
             <>
               <Text style={styles.sectionTitle}>1) Доминирующие таланты</Text>
-              {result.topTalents.map((talent: any, index: number) => (
-                <View key={index} style={styles.talentContainer}>
-                  <Text style={styles.talentTitle}>
-                    {talent.theme} — {talent.score}/5
-                  </Text>
-                  <Text style={styles.talentText}>
-                    <Text style={styles.bold}>Описание: </Text>
-                    {talent.desc}
-                  </Text>
-                  <Text style={styles.talentText}>
-                    <Text style={styles.bold}>Как использовать: </Text>
-                    {talent.use}
-                  </Text>
-                  <Text style={styles.talentText}>
-                    <Text style={styles.bold}>Советы:</Text>
-                  </Text>
-                  {talent.tips.map((tip: string, idx: number) => (
-                    <Text key={idx} style={styles.talentText}>- {tip}</Text>
-                  ))}
-                </View>
-              ))}
+              <LinearGradient
+              colors={["#4a148c", "#7b1fa2", "#9c27b0"]}
+              style={styles.talentTitleResult}>
+
+                {result.topTalents.map((talent: any, index: number) => (
+                  <View key={index} style={styles.talentContainer}>
+
+                    <Text style={styles.talentTitle}>
+                      {talent.theme} — {talent.score}/5
+                    </Text>
+
+                    <Text style={styles.talentText}>
+                      <Text style={styles.bold}>Описание: </Text>
+                      {talent.desc}
+                    </Text>
+                    <Text style={styles.talentText}>
+                      <Text style={styles.bold}>Как использовать: </Text>
+                      {talent.use}
+                    </Text>
+                    <Text style={styles.talentText}>
+                      <Text style={styles.bold}>Советы:</Text>
+                    </Text>
+                    {talent.tips.map((tip: string, idx: number) => (
+                      <Text key={idx} style={styles.talentText}>
+                        - {tip}
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </LinearGradient>
 
               <Text style={styles.sectionTitle}>2) Профессиональные сферы</Text>
-              {Object.entries(result.careers).map(([category, roles]: [string, string[]], index: number) => (
-                <View key={index} style={styles.talentContainer}>
-                  <Text style={styles.talentTitle}>{category}</Text>
-                  {roles.map((role: string, idx: number) => (
-                    <Text key={idx} style={styles.talentText}>- {role}</Text>
-                  ))}
-                </View>
-              ))}
+              {Object.entries(result.careers).map(
+                ([category, roles]: [string, string[]], index: number) => (
+                  <View key={index} style={styles.talentContainer}>
+                    <Text style={styles.talentTitle}>{category}</Text>
+                    {roles.map((role: string, idx: number) => (
+                      <Text key={idx} style={styles.talentText}>
+                        - {role}
+                      </Text>
+                    ))}
+                  </View>
+                )
+              )}
 
-              <Text style={styles.sectionTitle}>3) Рекомендации по развитию</Text>
+              <Text style={styles.sectionTitle}>
+                3) Рекомендации по развитию
+              </Text>
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Общие рекомендации:</Text>
               </Text>
@@ -103,7 +120,9 @@ export default function QuizScreen() {
                 "Ищите роли и задачи, где вы проводите хотя бы 50% времени в зонах своего таланта.",
                 "Запрашивайте регулярную обратную связь и измеряйте прогресс.",
               ].map((tip: string, idx: number) => (
-                <Text key={idx} style={styles.talentText}>- {tip}</Text>
+                <Text key={idx} style={styles.talentText}>
+                  - {tip}
+                </Text>
               ))}
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>По вашим талантам:</Text>
@@ -112,7 +131,10 @@ export default function QuizScreen() {
                 <View key={idx}>
                   <Text style={styles.talentText}>- {talent.theme}:</Text>
                   {talent.tips.map((tip: string, i: number) => (
-                    <Text key={i} style={styles.talentText}>  - {tip}</Text>
+                    <Text key={i} style={styles.talentText}>
+                      {" "}
+                      - {tip}
+                    </Text>
                   ))}
                 </View>
               ))}
@@ -122,28 +144,32 @@ export default function QuizScreen() {
           {quiz.id === "paei" && (
             <>
               <Text style={styles.sectionTitle}>Ваш тип личности</Text>
-              <Text style={styles.talentTitle}>{result.type}</Text>
+              <LinearGradient
+              colors={["#4a148c", "#7b1fa2", "#9c27b0"]}
+              style={styles.talentTitleResult}>
+                <Text style={styles.talentTitle}>{result.code}</Text>
+              </LinearGradient>
+              
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
-                {result.description}
+                {result.interpretation.map((i: any) => `${i.letter} - ${i.description}`).join("\n")}
               </Text>
               <Text style={styles.talentText}>
-                <Text style={styles.bold}>Сильные стороны: </Text>
-                {result.strengths.join(", ")}
+              <Text style={styles.bold}>Примечание: </Text>
+                {result.note}
               </Text>
-              <Text style={styles.talentText}>
-                <Text style={styles.bold}>Рекомендации: </Text>
-              </Text>
-              {result.recommendations.map((rec: string, idx: number) => (
-                <Text key={idx} style={styles.talentText}>- {rec}</Text>
-              ))}
             </>
           )}
 
           {quiz.id === "attachment" && (
             <>
               <Text style={styles.sectionTitle}>Ваш тип привязанности</Text>
-              <Text style={styles.talentTitle}>{result.type}</Text>
+              <LinearGradient
+              colors={["#4a148c", "#7b1fa2", "#9c27b0"]}
+              style={styles.talentTitleResult}>
+                <Text style={styles.talentTitle}>{result.type}</Text>
+              </LinearGradient>
+              
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
                 {result.description}
@@ -152,7 +178,9 @@ export default function QuizScreen() {
                 <Text style={styles.bold}>Советы: </Text>
               </Text>
               {result.tips.map((tip: string, idx: number) => (
-                <Text key={idx} style={styles.talentText}>- {tip}</Text>
+                <Text key={idx} style={styles.talentText}>
+                  - {tip}
+                </Text>
               ))}
             </>
           )}
@@ -160,7 +188,14 @@ export default function QuizScreen() {
           {quiz.id === "archetype" && (
             <>
               <Text style={styles.sectionTitle}>Ваш архетип личности</Text>
-              <Text style={styles.talentTitle}>{result.archetype}</Text>
+              <LinearGradient
+              colors={["#4a148c", "#7b1fa2", "#9c27b0"]}
+              style={styles.talentTitleResult}
+              >
+                <Text style={styles.talentTitle}>{result.archetype}</Text>
+              </LinearGradient>
+              
+
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
                 {result.description}
@@ -169,16 +204,21 @@ export default function QuizScreen() {
                 <Text style={styles.bold}>Рекомендации: </Text>
               </Text>
               {result.recommendations.map((rec: string, idx: number) => (
-                <Text key={idx} style={styles.talentText}>- {rec}</Text>
+                <Text key={idx} style={styles.talentText}>
+                  - {rec}
+                </Text>
               ))}
             </>
           )}
 
-          <TouchableOpacity style={styles.restartButton} onPress={() => {
-            clearResult();
-            setCurrentQuestion(0);
-            setAnswers([]);
-          }}>
+          <TouchableOpacity
+            style={styles.restartButton}
+            onPress={() => {
+              clearResult();
+              setCurrentQuestion(0);
+              setAnswers([]);
+            }}
+          >
             <LinearGradient
               colors={["#ffd700", "#ffed4e"]}
               style={styles.restartGradient}
@@ -219,7 +259,9 @@ export default function QuizScreen() {
             style={[
               styles.progressFill,
               {
-                width: `${((currentQuestion + 1) / quiz.questions.length) * 100}%`,
+                width: `${
+                  ((currentQuestion + 1) / quiz.questions.length) * 100
+                }%`,
               },
             ]}
           />
@@ -235,21 +277,23 @@ export default function QuizScreen() {
         </Text>
 
         <View style={styles.optionsContainer}>
-          {quiz.questions[currentQuestion].options.map((option: string, index: number) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.optionButton}
-              onPress={() => handleAnswer(index)}
-            >
-              <LinearGradient
-                colors={["rgba(156,39,176,0.1)", "rgba(103,58,183,0.1)"]}
-                style={styles.optionGradient}
+          {quiz.questions[currentQuestion].options.map(
+            (option: string, index: number) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.optionButton}
+                onPress={() => handleAnswer(index)}
               >
-                <Text style={styles.optionText}>{option}</Text>
-                <ChevronRight size={20} color="#9c27b0" />
-              </LinearGradient>
-            </TouchableOpacity>
-          ))}
+                <LinearGradient
+                  colors={["rgba(156,39,176,0.1)", "rgba(103,58,183,0.1)"]}
+                  style={styles.optionGradient}
+                >
+                  <Text style={styles.optionText}>{option}</Text>
+                  <ChevronRight size={20} color="#9c27b0" />
+                </LinearGradient>
+              </TouchableOpacity>
+            )
+          )}
         </View>
       </View>
     </ScrollView>
@@ -336,7 +380,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-  optionText: { fontSize: 16, color: "#fff", flex: 1},
+  optionText: { fontSize: 16, color: "#fff", flex: 1 },
   resultContainer: { padding: 40, alignItems: "center" },
   resultTitle: {
     fontSize: 28,
@@ -369,7 +413,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#fff",
-    marginBottom: 10,
+  },
+  talentTitleResult: {
+    marginBottom: 20,
+    borderRadius: 18,
+    padding: 35,
   },
   talentText: {
     fontSize: 16,
