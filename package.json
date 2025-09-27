@@ -4,9 +4,9 @@
   "main": "expo-router/entry",
   "private": true,
   "scripts": {
-    "start": "bunx expo start -p 25bamq5jv2qokn2qocpgu --tunnel",
-    "start-web": "bunx expo start -p 25bamq5jv2qokn2qocpgu --web --tunnel",
-    "start-web-dev": "DEBUG=expo* bunx expo start -p 25bamq5jv2qokn2qocpgu --web --tunnel",
+    "start": "bunx rork start -p 25bamq5jv2qokn2qocpgu --tunnel",
+    "start-web": "bunx rork start -p 25bamq5jv2qokn2qocpgu --web --tunnel",
+    "start-web-dev": "DEBUG=expo* bunx rork start -p 25bamq5jv2qokn2qocpgu --web --tunnel",
     "lint": "expo lint"
   },
   "dependencies": {

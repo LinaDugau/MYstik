@@ -12,16 +12,19 @@ export default function TestsScreen() {
   const [quizResults, setQuizResults] = useState<Record<string, any>>({});
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Fetch results for all quizzes at the top level
   const quizResultsData: Record<string, any> = {};
   Object.keys(QUIZZES).forEach((quizId) => {
     const { result } = useQuizResults(quizId);
     quizResultsData[quizId] = result;
   });
 
+  // Update quizResults when quizResultsData or refreshKey changes
   useEffect(() => {
     setQuizResults(quizResultsData);
-  }, [refreshKey, JSON.stringify(quizResultsData)]); 
+  }, [refreshKey, JSON.stringify(quizResultsData)]); // Use JSON.stringify for object comparison
 
+  // Refresh results when the screen is focused
   useFocusEffect(
     useCallback(() => {
       setRefreshKey((prev) => prev + 1);
@@ -137,12 +140,12 @@ const styles = StyleSheet.create({
   passedIcon: {
     position: "absolute",
     top: 12,
-    right: 12, 
+    right: 12, // Position on the right as requested
   },
   passedIconLeft: {
     position: "absolute",
     top: 12,
-    left: 12, 
+    left: 12, // Shift to left when lock icon is present
   },
   testIcon: {
     marginBottom: 8,

@@ -213,7 +213,7 @@ export default function HoroscopeScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>Гороскоп и матрица судьбы</Text>
+        <Text style={styles.title}>Гороскоп и Матрица судьбы</Text>
       </View>
 
       {!birthDate ? (

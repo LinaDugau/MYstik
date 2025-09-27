@@ -35,7 +35,7 @@ const handleSubscribe = () => {
         onPress: async () => {
           try {
             await activateSubscription();
-            Alert.alert("Успех", "Премиум подписка активирована");
+            Alert.alert("Успешно!", "Премиум подписка активирована");
             router.back();
           } catch (error) {
             Alert.alert("Ошибка", "Не удалось активировать подписку. Попробуйте снова.");
