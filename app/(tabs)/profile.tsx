@@ -8,6 +8,7 @@ import {
   Alert,
   Switch,
   Linking,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Crown, Calendar, LogOut, Bell, Globe, Info, HelpCircle, Phone, Mail, Sparkles } from "lucide-react-native";
@@ -15,41 +16,60 @@ import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useUser } from "@/providers/UserProvider";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
 
 export default function ProfileScreen() {
-  const { isPremium, setCardBack, cancelSubscription } = useSubscription();
+  const { isPremium, setCardBack } = useSubscription();
   const { birthDate, clearUserData } = useUser();
+  const { logAction } = useDatabase(); // Добавляем хук
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState("purple");
 
   const handleLogout = () => {
     Alert.alert(
       "Выход",
-      "Вы уверены, что хотите выйти? Все ваши данные будут удалены.",
+      "Выберите действие",
       [
         { text: "Отмена", style: "cancel" },
         {
           text: "Выйти",
           style: "destructive",
           onPress: async () => {
+            logAction("logout"); // Логируем выход
             await AsyncStorage.clear();
             clearUserData();
             router.replace("/");
           },
         },
+        {
+          text: "Админ-панель",
+          onPress: () => {
+            logAction("admin_panel_access"); // Логируем попытку входа в админ-панель
+            Alert.prompt(
+              "Вход в админ-панель",
+              "Введите пароль",
+              [
+                {
+                  text: "Отмена",
+                  style: "cancel",
+                },
+                {
+                  text: "Подтвердить",
+                  onPress: (password) => {
+                    if (password === "admin123") {
+                      router.push("/admin");
+                    } else {
+                      Alert.alert("Ошибка", "Неверный пароль");
+                    }
+                  },
+                },
+              ],
+              "secure-text"
+            );
+          },
+        },
       ]
     );
-  };
-
-  const handleCancelSubscription = async () => {
-    try {
-      await cancelSubscription();
-      setSelectedCardBack("purple");
-      Alert.alert("Успешно!", "Премиум подписка отменена");
-    } catch (error) {
-      Alert.alert("Ошибка", "Не удалось отменить подписку. Попробуйте снова.");
-      console.error("Cancel subscription error:", error);
-    }
   };
 
   const supportContacts = [
@@ -59,6 +79,7 @@ export default function ProfileScreen() {
   ];
 
   const showAboutApp = () => {
+    logAction("view_about_app"); // Логируем просмотр "О приложении"
     Alert.alert(
       "О приложении",
       "Приложение создано для хакатона\n\nВерсия: 1.0.0\nЯзык: Русский",
@@ -67,6 +88,7 @@ export default function ProfileScreen() {
   };
 
   const showSupport = () => {
+    logAction("view_support"); // Логируем просмотр "Поддержка"
     const contactsText = supportContacts
       .map(contact => `${contact.name}\nТел: ${contact.phone}\nEmail: ${contact.email}`)
       .join("\n\n");
@@ -78,7 +100,10 @@ export default function ProfileScreen() {
         { text: "Отмена", style: "cancel" },
         { 
           text: "Позвонить", 
-          onPress: () => Linking.openURL(`tel:${supportContacts[2].phone}`) 
+          onPress: () => {
+            logAction("support_call"); // Логируем попытку звонка в поддержку
+            Linking.openURL(`tel:${supportContacts[2].phone}`);
+          },
         },
       ]
     );
@@ -86,6 +111,7 @@ export default function ProfileScreen() {
 
   const handleCardBackChange = (back: string) => {
     if (!isPremium) {
+      logAction("attempt_card_back_change_non_premium"); // Логируем попытку смены рубашки без премиума
       Alert.alert(
         "Премиум функция",
         "Выбор рубашки карт доступен только по подписке",
@@ -96,6 +122,7 @@ export default function ProfileScreen() {
       );
       return;
     }
+    logAction(`change_card_back_${back}`); // Логируем смену рубашки карт
     setSelectedCardBack(back);
     setCardBack(back);
   };
@@ -147,7 +174,14 @@ export default function ProfileScreen() {
                 "Вы уверены, что хотите отменить подписку?",
                 [
                   { text: "Нет", style: "cancel" },
-                  { text: "Да", onPress: handleCancelSubscription },
+                  { 
+                    text: "Да", 
+                    onPress: () => {
+                      logAction("cancel_subscription"); // Логируем отмену подписки
+                      setSelectedCardBack("purple");
+                      setCardBack("purple");
+                    },
+                  },
                 ]
               );
             }}
@@ -158,7 +192,10 @@ export default function ProfileScreen() {
       ) : (
         <TouchableOpacity
           style={styles.subscribeCard}
-          onPress={() => router.push("/subscription")}
+          onPress={() => {
+            logAction("view_subscription_page"); // Логируем переход на страницу подписки
+            router.push("/subscription");
+          }}
         >
           <LinearGradient
             colors={["#9c27b0", "#673ab7"]}
@@ -211,7 +248,10 @@ export default function ProfileScreen() {
           </View>
           <Switch
             value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
+            onValueChange={(value) => {
+              logAction(`toggle_notifications_${value ? "on" : "off"}`); // Логируем переключение уведомлений
+              setNotificationsEnabled(value);
+            }}
             trackColor={{ false: "#333", true: "#ffd700" }}
             thumbColor={notificationsEnabled ? "#fff" : "#666"}
           />

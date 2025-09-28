@@ -16,6 +16,7 @@ import { useSubscription } from "@/providers/SubscriptionProvider";
 import { ZODIAC_SIGNS, getZodiacSign } from "@/constants/zodiac";
 import { router } from "expo-router";
 import Svg, { Circle, Line, Text as SvgText } from "react-native-svg";
+import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
 
 const { width, height } = Dimensions.get("window");
 
@@ -30,6 +31,7 @@ interface MatrixPoint {
 export default function HoroscopeScreen() {
   const { birthDate, setBirthDate } = useUser();
   const { isPremium } = useSubscription();
+  const { logHoroscopeClick } = useDatabase(); // Добавляем хук
   const [dateInput, setDateInput] = useState(birthDate || "");
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
   const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">("horoscope");
@@ -242,7 +244,10 @@ export default function HoroscopeScreen() {
           <View style={styles.tabSelector}>
             <TouchableOpacity
               style={[styles.tabButton, activeTab === "horoscope" && styles.tabButtonActive]}
-              onPress={() => setActiveTab("horoscope")}
+              onPress={() => {
+                logHoroscopeClick("horoscope"); // Логируем клик по вкладке Гороскоп
+                setActiveTab("horoscope");
+              }}
             >
               <LinearGradient
                 colors={activeTab === "horoscope" ? ["#2196f3", "#3f51b5"] : ["#666", "#999"]}
@@ -253,7 +258,10 @@ export default function HoroscopeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tabButton, activeTab === "matrix" && styles.tabButtonActive]}
-              onPress={() => setActiveTab("matrix")}
+              onPress={() => {
+                logHoroscopeClick("matrix"); // Логируем клик по вкладке Матрица
+                setActiveTab("matrix");
+              }}
             >
               <LinearGradient
                 colors={activeTab === "matrix" ? ["#4caf50", "#8bc34a"] : ["#666", "#999"]}
@@ -288,7 +296,10 @@ export default function HoroscopeScreen() {
                       styles.periodButton,
                       selectedPeriod === period && styles.periodButtonActive,
                     ]}
-                    onPress={() => setSelectedPeriod(period)}
+                    onPress={() => {
+                      logHoroscopeClick(`horoscope_${period}`); // Логируем выбор периода
+                      setSelectedPeriod(period);
+                    }}
                   >
                     <Text
                       style={[
@@ -365,14 +376,14 @@ export default function HoroscopeScreen() {
                   <TouchableOpacity
                     style={styles.unlockButton}
                     onPress={() => router.push("/subscription")}
-                  >
-                    <LinearGradient
-                      colors={["#ffd700", "#ffed4e"]}
-                      style={styles.unlockGradient}
                     >
-                      <Text style={styles.unlockText}>Открыть доступ</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                      <LinearGradient
+                        colors={["#ffd700", "#ffed4e"]}
+                        style={styles.unlockGradient}
+                      >
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
                 </View>
               )}
 
@@ -625,8 +636,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 12,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#4b4d4b",
   },
   tabButtonActive: {
     borderWidth: 1,

@@ -31,7 +31,6 @@ export default function QuizScreen() {
         <Text style={styles.lockedText}>
           Этот тест доступен только подписчикам. Оформите подписку и узнайте больше о себе!
         </Text>
-
         <TouchableOpacity
           style={styles.unlockButton}
           onPress={() => router.push("/subscription")}
@@ -43,7 +42,6 @@ export default function QuizScreen() {
             <Text style={styles.unlockText}>Открыть доступ</Text>
           </LinearGradient>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backText}>Назад</Text>
         </TouchableOpacity>
@@ -122,21 +120,15 @@ export default function QuizScreen() {
           {quiz.id === "paei" && (
             <>
               <Text style={styles.sectionTitle}>Ваш тип личности</Text>
-              <Text style={styles.talentTitle}>{result.type}</Text>
+              <Text style={styles.talentTitle}>{result.code}</Text>
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
-                {result.description}
+                {result.interpretation.map((i: any) => `${i.letter} - ${i.description}`).join("\n")}
               </Text>
               <Text style={styles.talentText}>
-                <Text style={styles.bold}>Сильные стороны: </Text>
-                {result.strengths.join(", ")}
+                <Text style={styles.bold}>Примечание: </Text>
+                {result.note}
               </Text>
-              <Text style={styles.talentText}>
-                <Text style={styles.bold}>Рекомендации: </Text>
-              </Text>
-              {result.recommendations.map((rec: string, idx: number) => (
-                <Text key={idx} style={styles.talentText}>- {rec}</Text>
-              ))}
             </>
           )}
 
@@ -174,11 +166,14 @@ export default function QuizScreen() {
             </>
           )}
 
-          <TouchableOpacity style={styles.restartButton} onPress={() => {
-            clearResult();
-            setCurrentQuestion(0);
-            setAnswers([]);
-          }}>
+          <TouchableOpacity
+            style={styles.restartButton}
+            onPress={() => {
+              clearResult();
+              setCurrentQuestion(0);
+              setAnswers([]);
+            }}
+          >
             <LinearGradient
               colors={["#ffd700", "#ffed4e"]}
               style={styles.restartGradient}
@@ -336,7 +331,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-  optionText: { fontSize: 16, color: "#fff", flex: 1},
+  optionText: { fontSize: 16, color: "#fff", flex: 1 },
   resultContainer: { padding: 40, alignItems: "center" },
   resultTitle: {
     fontSize: 28,

@@ -8,44 +8,41 @@ import {
   Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Check, Crown, Sparkles, Infinity, Grid3x3 } from "lucide-react-native";
+import { Check, Crown, Sparkles, Infinity } from "lucide-react-native";
 import { router } from "expo-router";
 import { useSubscription } from "@/providers/SubscriptionProvider";
+import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
 
 export default function SubscriptionScreen() {
   const { activateSubscription } = useSubscription();
+  const { logSubscription } = useDatabase(); // Добавляем хук
 
   const features = [
     { icon: Infinity, text: "Безлимитные гадания на Таро" },
-    { icon: Check, text: "Смена рубашек карт" },
     { icon: Check, text: "Полная матрица судьбы" },
     { icon: Check, text: "Расширенные гороскопы" },
     { icon: Check, text: "Все премиум тесты" },
     { icon: Check, text: "Персональные рекомендации" },
   ];
 
-const handleSubscribe = () => {
-  Alert.alert(
-    "Оформить подписку",
-    "Премиум подписка за 990₽ в месяц. Продолжить?",
-    [
-      { text: "Отмена", style: "cancel" },
-      {
-        text: "Оформить",
-        onPress: async () => {
-          try {
-            await activateSubscription();
+  const handleSubscribe = () => {
+    Alert.alert(
+      "Оформить подписку",
+      "Премиум подписка за 990₽ в месяц. Продолжить?",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Оформить",
+          onPress: () => {
+            activateSubscription();
+            logSubscription(990); // Логируем покупку подписки
             Alert.alert("Успешно!", "Премиум подписка активирована");
             router.back();
-          } catch (error) {
-            Alert.alert("Ошибка", "Не удалось активировать подписку. Попробуйте снова.");
-            console.error("Activate subscription error:", error);
-          }
+          },
         },
-      },
-    ]
-  );
-};
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>

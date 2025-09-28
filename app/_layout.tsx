@@ -14,23 +14,31 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Назад" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen 
-        name="subscription" 
-        options={{ 
+      <Stack.Screen
+        name="subscription"
+        options={{
           presentation: "modal",
           title: "Премиум подписка",
           headerStyle: { backgroundColor: "#1a1a2e" },
-          headerTintColor: "#fff"
-        }} 
+          headerTintColor: "#fff",
+        }}
       />
-      <Stack.Screen 
-        name="quiz/[id]" 
-        options={{ 
+      <Stack.Screen
+        name="quiz/[id]"
+        options={{
           presentation: "modal",
           title: "Тест",
           headerStyle: { backgroundColor: "#1a1a2e" },
-          headerTintColor: "#fff"
-        }} 
+          headerTintColor: "#fff",
+        }}
+      />
+      <Stack.Screen
+        name="admin"
+        options={{
+          title: "Админ",
+          headerStyle: { backgroundColor: "#1a1a2e" },
+          headerTintColor: "#fff",
+        }}
       />
     </Stack>
   );
