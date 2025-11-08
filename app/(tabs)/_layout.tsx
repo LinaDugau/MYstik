@@ -1,9 +1,11 @@
 import { Tabs } from "expo-router";
 import { Home, Star, User, Sparkles, BookOpen } from "lucide-react-native";
-import React from "react";
-import { StyleSheet, Platform } from "react-native";
+import { Platform } from "react-native";
+import { useDatabase } from "@/hooks/useDatabase";
 
 export default function TabsLayout() {
+  const { logTabClick, deviceId } = useDatabase();
+
   return (
     <Tabs
       screenOptions={{
@@ -21,6 +23,15 @@ export default function TabsLayout() {
         headerTintColor: "#fff",
         headerTitleStyle: {
           fontWeight: "600",
+        },
+      }}
+      screenListeners={{
+        tabPress: (e) => {
+          // Используем tabPress вместо focus для более надежного логирования
+          const routeName = e.target?.split("-")[0] || "unknown";
+          if (deviceId) {
+            logTabClick(routeName);
+          }
         },
       }}
     >
@@ -62,17 +73,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: "#1a1a2e",
-    borderTopColor: "rgba(255,255,255,0.1)",
-    paddingBottom: 8,
-    paddingTop: 8,
-    height: 60,
-  },
-  tabBarLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-});

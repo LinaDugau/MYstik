@@ -189,7 +189,7 @@ export const QUIZZES: Record<string, Quiz> = {
     calculateResult: (answers: number[]) => {
       const scores: { [key: string]: number } = {};
       QUIZZES.strengths.questions.forEach((q, idx) => {
-        scores[q.theme] = answers[idx];
+        scores[q.theme] = (scores[q.theme] || 0) + answers[idx];
       });
       const sortedThemes = Object.entries(scores).sort((a, b) => b[1] - a[1]);
       const topThemes = sortedThemes.slice(0, 5);
@@ -435,7 +435,7 @@ export const QUIZZES: Record<string, Quiz> = {
           "Буду искать новый нестандартный выход из ситуации.",
           "Обращусь за поддержкой к коллегам.",
         ],
-      },
+      }
     ],
     calculateResult: (answers: number[]) => {
       const scores = { P: 0, A: 0, E: 0, I: 0 };
@@ -529,7 +529,7 @@ export const QUIZZES: Record<string, Quiz> = {
         scores,
         code,
         interpretation,
-        note: "Примечание: результат данного тест — приблизительный. Для более точной оценки используйте наблюдение и обсуждение в команде, либо обратитесь к специалисту.",
+        note: "Примечание: тест — ориентир, а не окончательный диагноз. Для более точной оценки используйте наблюдение и обсуждение в команде.",
       };
     },
     resultDescription: (result: any) =>

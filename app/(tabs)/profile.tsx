@@ -8,48 +8,70 @@ import {
   Alert,
   Switch,
   Linking,
+  TextInput,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Crown, Calendar, LogOut, Bell, Globe, Info, HelpCircle, Phone, Mail, Sparkles } from "lucide-react-native";
+import {
+  Crown,
+  Calendar,
+  LogOut,
+  Bell,
+  Globe,
+  Info,
+  HelpCircle,
+  Sparkles,
+} from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useUser } from "@/providers/UserProvider";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDatabase } from "@/hooks/useDatabase";
 
 export default function ProfileScreen() {
-  const { isPremium, setCardBack, cancelSubscription } = useSubscription();
+  const { isPremium, setCardBack, cancelSubscription } = useSubscription(); // Обязательно добавляем cancelSubscription
   const { birthDate, clearUserData } = useUser();
+  const { logAction } = useDatabase();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState("purple");
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+
+  const handleAdminLogin = () => {
+    if (adminPassword === "admin123") {
+      setShowAdminModal(false);
+      setAdminPassword("");
+      router.push("/admin");
+    } else {
+      Alert.alert("Ошибка", "Неверный пароль");
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
       "Выход",
-      "Вы уверены, что хотите выйти? Все ваши данные будут удалены.",
+      "Выберите действие",
       [
         { text: "Отмена", style: "cancel" },
         {
           text: "Выйти",
           style: "destructive",
           onPress: async () => {
+            logAction("logout");
             await AsyncStorage.clear();
             clearUserData();
             router.replace("/");
           },
         },
+        {
+          text: "Админ-панель",
+          onPress: () => {
+            logAction("admin_panel_access");
+            setShowAdminModal(true);
+          },
+        },
       ]
     );
-  };
-
-  const handleCancelSubscription = async () => {
-    try {
-      await cancelSubscription();
-      setSelectedCardBack("purple");
-      Alert.alert("Успешно!", "Премиум подписка отменена");
-    } catch (error) {
-      Alert.alert("Ошибка", "Не удалось отменить подписку. Попробуйте снова.");
-      console.error("Cancel subscription error:", error);
-    }
   };
 
   const supportContacts = [
@@ -59,6 +81,7 @@ export default function ProfileScreen() {
   ];
 
   const showAboutApp = () => {
+    logAction("view_about_app");
     Alert.alert(
       "О приложении",
       "Приложение создано для хакатона\n\nВерсия: 1.0.0\nЯзык: Русский",
@@ -67,10 +90,11 @@ export default function ProfileScreen() {
   };
 
   const showSupport = () => {
+    logAction("view_support");
     const contactsText = supportContacts
-      .map(contact => `${contact.name}\nТел: ${contact.phone}\nEmail: ${contact.email}`)
+      .map(c => `${c.name}\nТел: ${c.phone}\nEmail: ${c.email}`)
       .join("\n\n");
-    
+
     Alert.alert(
       "Поддержка",
       contactsText,
@@ -78,7 +102,10 @@ export default function ProfileScreen() {
         { text: "Отмена", style: "cancel" },
         { 
           text: "Позвонить", 
-          onPress: () => Linking.openURL(`tel:${supportContacts[2].phone}`) 
+          onPress: () => {
+            logAction("support_call");
+            Linking.openURL(`tel:${supportContacts[2].phone}`);
+          },
         },
       ]
     );
@@ -86,6 +113,7 @@ export default function ProfileScreen() {
 
   const handleCardBackChange = (back: string) => {
     if (!isPremium) {
+      logAction("attempt_card_back_change_non_premium");
       Alert.alert(
         "Премиум функция",
         "Выбор рубашки карт доступен только по подписке",
@@ -96,8 +124,22 @@ export default function ProfileScreen() {
       );
       return;
     }
+    logAction(`change_card_back_${back}`);
     setSelectedCardBack(back);
     setCardBack(back);
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      await cancelSubscription();
+      logAction("cancel_subscription");
+      setSelectedCardBack("purple");
+      setCardBack("purple");
+      Alert.alert("Успешно", "Подписка отменена");
+    } catch (error) {
+      console.error("Ошибка отмены подписки:", error);
+      Alert.alert("Ошибка", "Не удалось отменить подписку. Попробуйте снова.");
+    }
   };
 
   const cardBacks = [
@@ -139,6 +181,7 @@ export default function ProfileScreen() {
               <Text style={styles.premiumSubtitle}>Безлимитный доступ</Text>
             </View>
           </LinearGradient>
+
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => {
@@ -158,7 +201,10 @@ export default function ProfileScreen() {
       ) : (
         <TouchableOpacity
           style={styles.subscribeCard}
-          onPress={() => router.push("/subscription")}
+          onPress={() => {
+            logAction("view_subscription_page");
+            router.push("/subscription");
+          }}
         >
           <LinearGradient
             colors={["#9c27b0", "#673ab7"]}
@@ -183,7 +229,7 @@ export default function ProfileScreen() {
               <Text style={styles.menuText}>Рубашка карт</Text>
             </View>
             <View style={styles.cardBackOptions}>
-              {cardBacks.map((back) => (
+              {cardBacks.map(back => (
                 <TouchableOpacity
                   key={back.id}
                   style={[
@@ -203,7 +249,7 @@ export default function ProfileScreen() {
             </View>
           </View>
         )}
-        
+
         <View style={styles.menuItem}>
           <View style={styles.menuItemLeft}>
             <Bell size={20} color="#ffd700" />
@@ -211,12 +257,15 @@ export default function ProfileScreen() {
           </View>
           <Switch
             value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
+            onValueChange={value => {
+              logAction(`toggle_notifications_${value ? "on" : "off"}`);
+              setNotificationsEnabled(value);
+            }}
             trackColor={{ false: "#333", true: "#ffd700" }}
             thumbColor={notificationsEnabled ? "#fff" : "#666"}
           />
         </View>
-        
+
         <View style={styles.menuItem}>
           <View style={styles.menuItemLeft}>
             <Globe size={20} color="#ffd700" />
@@ -224,7 +273,7 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.menuValue}>Русский</Text>
         </View>
-        
+
         <TouchableOpacity style={styles.menuItem} onPress={showAboutApp}>
           <View style={styles.menuItemLeft}>
             <Info size={20} color="#ffd700" />
@@ -232,7 +281,7 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.menuItem} onPress={showSupport}>
           <View style={styles.menuItemLeft}>
             <HelpCircle size={20} color="#ffd700" />
@@ -246,6 +295,45 @@ export default function ProfileScreen() {
         <LogOut size={20} color="#ff4444" />
         <Text style={styles.logoutText}>Выйти</Text>
       </TouchableOpacity>
+
+      <Modal
+        visible={showAdminModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAdminModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Вход в админ-панель</Text>
+            <Text style={styles.modalSubtitle}>Введите пароль</Text>
+            <TextInput
+              style={styles.passwordInput}
+              value={adminPassword}
+              onChangeText={setAdminPassword}
+              placeholder="Пароль"
+              secureTextEntry
+              placeholderTextColor="#666"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => {
+                  setShowAdminModal(false);
+                  setAdminPassword("");
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalConfirmButton]}
+                onPress={handleAdminLogin}
+              >
+                <Text style={styles.confirmButtonText}>Подтвердить</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -433,5 +521,67 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#ff4444",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#1a1a2e",
+    borderRadius: 16,
+    padding: 24,
+    width: "80%",
+    maxWidth: 300,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#b8b8d0",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  passwordInput: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 8,
+    padding: 12,
+    color: "#fff",
+    fontSize: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalCancelButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+  modalConfirmButton: {
+    backgroundColor: "#ffd700",
+  },
+  cancelButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  confirmButtonText: {
+    color: "#1a1a2e",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

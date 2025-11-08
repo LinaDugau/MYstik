@@ -1,14 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  Dimensions,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Calendar, Gem, Heart, Crown, Sparkles } from "lucide-react-native";
 import { useUser } from "@/providers/UserProvider";
@@ -16,6 +7,7 @@ import { useSubscription } from "@/providers/SubscriptionProvider";
 import { ZODIAC_SIGNS, getZodiacSign } from "@/constants/zodiac";
 import { router } from "expo-router";
 import Svg, { Circle, Line, Text as SvgText } from "react-native-svg";
+import { useDatabase } from "@/hooks/useDatabase";
 
 const { width, height } = Dimensions.get("window");
 
@@ -30,6 +22,7 @@ interface MatrixPoint {
 export default function HoroscopeScreen() {
   const { birthDate, setBirthDate } = useUser();
   const { isPremium } = useSubscription();
+  const { logHoroscopeClick } = useDatabase();
   const [dateInput, setDateInput] = useState(birthDate || "");
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
   const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">("horoscope");
@@ -54,14 +47,11 @@ export default function HoroscopeScreen() {
   const isValidDate = (date: string): boolean => {
     const regex = /^\d{2}\.\d{2}\.\d{4}$/;
     if (!regex.test(date)) return false;
-
     const [day, month, year] = date.split(".").map(Number);
     if (year < 1900 || year > 2100) return false;
     if (month < 1 || month > 12) return false;
-
     const daysInMonth = new Date(year, month, 0).getDate();
     if (day < 1 || day > daysInMonth) return false;
-
     return true;
   };
 
@@ -77,12 +67,10 @@ export default function HoroscopeScreen() {
     const regex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
     const match = date.match(regex);
     if (!match) return null;
-
     const [, dayStr, monthStr, yearStr] = match;
     const day = parseInt(dayStr, 10);
     const month = parseInt(monthStr, 10);
     const year = parseInt(yearStr, 10);
-
     const daysInMonth = new Date(year, month, 0).getDate();
     if (month < 1 || month > 12 || day < 1 || day > daysInMonth) {
       return null;
@@ -105,7 +93,6 @@ export default function HoroscopeScreen() {
     const I = reduceNum(V + G);
     const Z = reduceNum(A + G);
     const S = reduceNum(E + Zh + I + Z);
-
     const A1 = reduceNum(A + D);
     const A2 = reduceNum(A1 + A);
     const B1 = reduceNum(B + D);
@@ -157,7 +144,6 @@ export default function HoroscopeScreen() {
       { value: I1, x: centerX + innerRadius / Math.sqrt(2), y: centerY + innerRadius / Math.sqrt(2), meaning: "И1", locked: !isPremium },
       { value: Z1, x: centerX - innerRadius / Math.sqrt(2), y: centerY + innerRadius / Math.sqrt(2), meaning: "З1", locked: !isPremium },
     ];
-
     return points;
   };
 
@@ -168,10 +154,9 @@ export default function HoroscopeScreen() {
 
   const getArcanaName = (num: number): string => {
     const arcanas = [
-      "", "Маг", "Верховная Жрица", "Императрица", "Император", "Иерофант",
-      "Влюбленные", "Колесница", "Сила", "Отшельник", "Колесо Фортуны",
-      "Справедливость", "Повешенный", "Смерть", "Умеренность", "Дьявол",
-      "Башня", "Звезда", "Луна", "Солнце", "Суд", "Мир", "Шут"
+      "", "Маг", "Верховная Жрица", "Императрица", "Император", "Иерофант", "Влюбленные", "Колесница", "Сила", "Отшельник",
+      "Колесо Фортуны", "Справедливость", "Повешенный", "Смерть", "Умеренность", "Дьявол", "Башня", "Звезда", "Луна", "Солнце",
+      "Суд", "Мир", "Шут"
     ];
     return arcanas[num] || `Аркан ${num}`;
   };
@@ -215,7 +200,6 @@ export default function HoroscopeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Гороскоп и Матрица судьбы</Text>
       </View>
-
       {!birthDate ? (
         <View style={styles.dateInputContainer}>
           <Text style={styles.inputLabel}>Введите дату рождения</Text>
@@ -229,10 +213,7 @@ export default function HoroscopeScreen() {
             maxLength={10}
           />
           <TouchableOpacity style={styles.submitButton} onPress={handleDateSubmit}>
-            <LinearGradient
-              colors={["#ffd700", "#ffed4e"]}
-              style={styles.submitGradient}
-            >
+            <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.submitGradient}>
               <Text style={styles.submitText}>Продолжить</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -241,114 +222,90 @@ export default function HoroscopeScreen() {
         <>
           <View style={styles.tabSelector}>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === "horoscope" && styles.tabButtonActive]}
-              onPress={() => setActiveTab("horoscope")}
+              style={[styles.tabButton, activeTab === "horoscope" ? styles.tabButtonActive : styles.tabButtonInactive]}
+              onPress={() => {
+                logHoroscopeClick("horoscope");
+                setActiveTab("horoscope");
+              }}
             >
               <LinearGradient
-                colors={activeTab === "horoscope" ? ["#2196f3", "#3f51b5"] : ["#666", "#999"]}
+                colors={activeTab === "horoscope" ? ["#2196f3", "#3f51b5"] : ["#444", "#666"]}
                 style={styles.tabGradient}
               >
-                <Text style={styles.tabText}>Гороскоп</Text>
+                <Text style={[styles.tabText, activeTab === "horoscope" ? styles.tabTextActive : styles.tabTextInactive]}>
+                  Гороскоп
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === "matrix" && styles.tabButtonActive]}
-              onPress={() => setActiveTab("matrix")}
+              style={[styles.tabButton, activeTab === "matrix" ? styles.tabButtonActive : styles.tabButtonInactive]}
+              onPress={() => {
+                logHoroscopeClick("matrix");
+                setActiveTab("matrix");
+              }}
             >
               <LinearGradient
-                colors={activeTab === "matrix" ? ["#4caf50", "#8bc34a"] : ["#666", "#999"]}
+                colors={activeTab === "matrix" ? ["#4caf50", "#8bc34a"] : ["#444", "#666"]}
                 style={styles.tabGradient}
               >
-                <Text style={styles.tabText}>Матрица судьбы</Text>
+                <Text style={[styles.tabText, activeTab === "matrix" ? styles.tabTextActive : styles.tabTextInactive]}>
+                  Матрица судьбы
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
-
           {activeTab === "horoscope" && (
-            <>
+            <View key="horoscope-content">
               <View style={styles.zodiacCard}>
-                <LinearGradient
-                  colors={["#2196f3", "#3f51b5"]}
-                  style={styles.zodiacGradient}
-                >
+                <LinearGradient colors={["#2196f3", "#3f51b5"]} style={styles.zodiacGradient}>
                   <Text style={styles.zodiacSymbol}>{zodiacData?.symbol || ""}</Text>
                   <Text style={styles.zodiacName}>{zodiacData?.name || ""}</Text>
                   <Text style={styles.zodiacDates}>{zodiacData?.dates || ""}</Text>
-                  <Text style={styles.zodiacElement}>
-                    Стихия: {zodiacData?.element || ""}
-                  </Text>
+                  <Text style={styles.zodiacElement}>Стихия: {zodiacData?.element || ""}</Text>
                 </LinearGradient>
               </View>
-
               <View style={styles.periodSelector}>
                 {(["today", "week", "month"] as const).map((period) => (
                   <TouchableOpacity
                     key={period}
-                    style={[
-                      styles.periodButton,
-                      selectedPeriod === period && styles.periodButtonActive,
-                    ]}
-                    onPress={() => setSelectedPeriod(period)}
+                    style={[styles.periodButton, selectedPeriod === period && styles.periodButtonActive]}
+                    onPress={() => {
+                      logHoroscopeClick(`horoscope_${period}`);
+                      setSelectedPeriod(period);
+                    }}
                   >
-                    <Text
-                      style={[
-                        styles.periodText,
-                        selectedPeriod === period && styles.periodTextActive,
-                      ]}
-                    >
-                      {period === "today"
-                        ? "Сегодня"
-                        : period === "week"
-                        ? "Неделя"
-                        : "Месяц"}
+                    <Text style={[styles.periodText, selectedPeriod === period && styles.periodTextActive]}>
+                      {period === "today" ? "Сегодня" : period === "week" ? "Неделя" : "Месяц"}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
-
               <View style={styles.horoscopeCard}>
                 {selectedPeriod === "today" || isPremium ? (
                   <>
                     <Text style={styles.horoscopeTitle}>
-                      {selectedPeriod === "today"
-                        ? "Прогноз на сегодня"
-                        : selectedPeriod === "week"
-                        ? "Прогноз на неделю"
-                        : "Прогноз на месяц"}
+                      {selectedPeriod === "today" ? "Прогноз на сегодня" : selectedPeriod === "week" ? "Прогноз на неделю" : "Прогноз на месяц"}
                     </Text>
-                    <Text style={styles.horoscopeText}>
-                      {zodiacData?.horoscope[selectedPeriod] || ""}
-                    </Text>
+                    <Text style={styles.horoscopeText}>{zodiacData?.horoscope[selectedPeriod] || ""}</Text>
                   </>
                 ) : (
                   <View style={styles.lockedBlock}>
                     <Crown size={28} color="#ffd700" />
-                    <Text style={styles.lockedText}>
-                      Доступно только для премиум
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.unlockButton}
-                      onPress={() => router.push("/subscription")}
-                    >
-                      <LinearGradient
-                        colors={["#ffd700", "#ffed4e"]}
-                        style={styles.unlockGradient}
-                      >
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
                         <Text style={styles.unlockText}>Открыть доступ</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
                 )}
               </View>
-
               {isPremium ? (
                 <View style={styles.infoCards}>
                   <View style={styles.infoCard}>
                     <Gem size={24} color="#ffd700" />
                     <Text style={styles.infoTitle}>Камни-талисманы</Text>
-                    <Text style={styles.infoText}>
-                      {zodiacData?.stones.join(", ") || ""}
-                    </Text>
+                    <Text style={styles.infoText}>{zodiacData?.stones.join(", ") || ""}</Text>
                   </View>
                   <View style={styles.infoCard}>
                     <Heart size={24} color="#ff69b4" />
@@ -359,51 +316,35 @@ export default function HoroscopeScreen() {
               ) : (
                 <View style={styles.lockedBlock}>
                   <Crown size={28} color="#ffd700" />
-                  <Text style={styles.lockedText}>
-                    Камни и тотемное животное доступны только для премиум
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.unlockButton}
-                    onPress={() => router.push("/subscription")}
-                  >
-                    <LinearGradient
-                      colors={["#ffd700", "#ffed4e"]}
-                      style={styles.unlockGradient}
-                    >
+                  <Text style={styles.lockedText}>Камни и тотемное животное доступны только для премиум</Text>
+                  <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                    <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
                       <Text style={styles.unlockText}>Открыть доступ</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
               )}
-
               <View style={styles.compatibilityCard}>
                 <Text style={styles.compatibilityTitle}>Совместимость</Text>
                 <View style={styles.compatibilityList}>
                   <View style={styles.compatibilityItem}>
                     <Text style={styles.compatibilityLabel}>Лучшая:</Text>
-                    <Text style={styles.compatibilityValue}>
-                      {zodiacData?.compatibility.best.join(", ") || ""}
-                    </Text>
+                    <Text style={styles.compatibilityValue}>{zodiacData?.compatibility.best.join(", ") || ""}</Text>
                   </View>
                   <View style={styles.compatibilityItem}>
                     <Text style={styles.compatibilityLabel}>Хорошая:</Text>
-                    <Text style={styles.compatibilityValue}>
-                      {zodiacData?.compatibility.good.join(", ") || ""}
-                    </Text>
+                    <Text style={styles.compatibilityValue}>{zodiacData?.compatibility.good.join(", ") || ""}</Text>
                   </View>
                   <View style={styles.compatibilityItem}>
                     <Text style={styles.compatibilityLabel}>Сложная:</Text>
-                    <Text style={styles.compatibilityValue}>
-                      {zodiacData?.compatibility.challenging.join(", ") || ""}
-                    </Text>
+                    <Text style={styles.compatibilityValue}>{zodiacData?.compatibility.challenging.join(", ") || ""}</Text>
                   </View>
                 </View>
               </View>
-            </>
+            </View>
           )}
-
           {activeTab === "matrix" && matrix && (
-            <>
+            <View key="matrix-content">
               <View style={[styles.matrixContainer, { marginTop: 0, marginBottom: 40, minHeight: Math.min(width * 1.2, height * 0.7, 600) }]}>
                 <Svg
                   width={width * 0.95}
@@ -522,7 +463,6 @@ export default function HoroscopeScreen() {
                   ))}
                 </Svg>
               </View>
-
               <View style={[styles.interpretationContainer, { paddingTop: 10 }]}>
                 <Text style={styles.interpretationTitle}>Расшифровка точек</Text>
                 {matrix.map((point, index) => (
@@ -537,9 +477,7 @@ export default function HoroscopeScreen() {
                   >
                     <View style={styles.pointHeader}>
                       <View style={styles.pointInfo}>
-                        <Text style={styles.pointValue}>
-                          {point.locked ? "?" : point.value}
-                        </Text>
+                        <Text style={styles.pointValue}>{point.locked ? "?" : point.value}</Text>
                         <View>
                           <Text style={styles.pointMeaning}>{point.meaning}</Text>
                           {!point.locked && (
@@ -550,36 +488,27 @@ export default function HoroscopeScreen() {
                       {point.locked && <Sparkles size={20} color="#666" />}
                     </View>
                     {!point.locked && (
-                      <Text style={styles.pointDescription}>
-                        {getPointDescription(index)}
-                      </Text>
+                      <Text style={styles.pointDescription}>{getPointDescription(index)}</Text>
                     )}
                     {point.locked && (
-                      <Text style={styles.lockedText}>
-                        Разблокируйте полную расшифровку с премиум подпиской
-                      </Text>
+                      <Text style={styles.lockedText}>Разблокируйте полную расшифровку с премиум подпиской</Text>
                     )}
                   </TouchableOpacity>
                 ))}
               </View>
-
               {!isPremium && (
                 <TouchableOpacity
                   style={[styles.unlockButton, { marginVertical: 10 }]}
                   onPress={() => router.push("/subscription")}
                 >
-                  <LinearGradient
-                    colors={["#ffd700", "#ffed4e"]}
-                    style={styles.unlockGradient}
-                  >
+                  <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
                     <Sparkles size={20} color="#1a1a2e" />
                     <Text style={styles.unlockText}>Разблокировать полную матрицу</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               )}
-            </>
+            </View>
           )}
-
           <TouchableOpacity
             style={styles.changeButton}
             onPress={() => {
@@ -597,11 +526,27 @@ export default function HoroscopeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0f0f1e" },
-  header: { padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", color: "#fff" },
-  dateInputContainer: { padding: 20, alignItems: "center" },
-  inputLabel: { fontSize: 16, color: "#b8b8d0", marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#0f0f1e",
+  },
+  header: {
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  dateInputContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  inputLabel: {
+    fontSize: 16,
+    color: "#b8b8d0",
+    marginBottom: 20,
+  },
   dateInput: {
     width: "100%",
     padding: 16,
@@ -612,9 +557,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  submitButton: { width: "100%" },
-  submitGradient: { padding: 16, borderRadius: 12, alignItems: "center" },
-  submitText: { fontSize: 16, fontWeight: "600", color: "#1a1a2e" },
+  submitButton: {
+    width: "100%",
+  },
+  submitGradient: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  submitText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1a1a2e",
+  },
   tabSelector: {
     flexDirection: "row",
     paddingHorizontal: 20,
@@ -625,12 +580,24 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 12,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#4b4d4b",
   },
   tabButtonActive: {
     borderWidth: 1,
     borderColor: "#ffd700",
+    elevation: 4,
+    shadowColor: "#ffd700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  tabButtonInactive: {
+    borderWidth: 1,
+    borderColor: "#666",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   tabGradient: {
     padding: 12,
@@ -639,14 +606,41 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  tabTextActive: {
     color: "#fff",
   },
-  zodiacCard: { margin: 20, borderRadius: 20, overflow: "hidden" },
-  zodiacGradient: { padding: 30, alignItems: "center" },
-  zodiacSymbol: { fontSize: 60, marginBottom: 10 },
-  zodiacName: { fontSize: 24, fontWeight: "bold", color: "#fff", marginBottom: 8 },
-  zodiacDates: { fontSize: 14, color: "rgba(255,255,255,0.8)", marginBottom: 8 },
-  zodiacElement: { fontSize: 14, color: "rgba(255,255,255,0.8)" },
+  tabTextInactive: {
+    color: "#b8b8d0",
+  },
+  zodiacCard: {
+    margin: 20,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  zodiacGradient: {
+    padding: 30,
+    alignItems: "center",
+  },
+  zodiacSymbol: {
+    fontSize: 60,
+    marginBottom: 10,
+  },
+  zodiacName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+  },
+  zodiacDates: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.8)",
+    marginBottom: 8,
+  },
+  zodiacElement: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.8)",
+  },
   periodSelector: {
     flexDirection: "row",
     paddingHorizontal: 20,
@@ -665,17 +659,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ffd700",
   },
-  periodText: { color: "#b8b8d0", fontSize: 14, fontWeight: "500" },
-  periodTextActive: { color: "#ffd700" },
+  periodText: {
+    color: "#b8b8d0",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  periodTextActive: {
+    color: "#ffd700",
+  },
   horoscopeCard: {
     margin: 20,
     padding: 20,
     backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 16,
   },
-  horoscopeTitle: { fontSize: 18, fontWeight: "600", color: "#ffd700", marginBottom: 12 },
-  horoscopeText: { fontSize: 14, color: "#b8b8d0", lineHeight: 22 },
-  infoCards: { flexDirection: "row", paddingHorizontal: 20, gap: 10 },
+  horoscopeTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#ffd700",
+    marginBottom: 12,
+  },
+  horoscopeText: {
+    fontSize: 14,
+    color: "#b8b8d0",
+    lineHeight: 22,
+  },
+  infoCards: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    gap: 10,
+  },
   infoCard: {
     flex: 1,
     padding: 16,
@@ -683,19 +696,48 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
   },
-  infoTitle: { fontSize: 14, fontWeight: "600", color: "#fff", marginTop: 8, marginBottom: 8 },
-  infoText: { fontSize: 12, color: "#b8b8d0", textAlign: "center" },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#fff",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 12,
+    color: "#b8b8d0",
+    textAlign: "center",
+  },
   compatibilityCard: {
     margin: 20,
     padding: 20,
     backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 16,
   },
-  compatibilityTitle: { fontSize: 18, fontWeight: "600", color: "#ffd700", marginBottom: 16 },
-  compatibilityList: { gap: 12 },
-  compatibilityItem: { flexDirection: "row", gap: 8 },
-  compatibilityLabel: { fontSize: 14, color: "#fff", fontWeight: "500", width: 80 },
-  compatibilityValue: { fontSize: 14, color: "#b8b8d0", flex: 1 },
+  compatibilityTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#ffd700",
+    marginBottom: 16,
+  },
+  compatibilityList: {
+    gap: 12,
+  },
+  compatibilityItem: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  compatibilityLabel: {
+    fontSize: 14,
+    color: "#fff",
+    fontWeight: "500",
+    width: 80,
+  },
+  compatibilityValue: {
+    fontSize: 14,
+    color: "#b8b8d0",
+    flex: 1,
+  },
   changeButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -703,12 +745,26 @@ const styles = StyleSheet.create({
     gap: 8,
     margin: 20,
     padding: 12,
-    backgroundColor: "rgba(255,215,0,0.1)",
+    backgroundColor: "rgba(255,215,0,0.2)",
     borderRadius: 12,
   },
-  changeText: { color: "#ffd700", fontSize: 14, fontWeight: "500" },
-  lockedBlock: { alignItems: "center", justifyContent: "center", gap: 12 },
-  lockedText: { color: "#b8b8d0", fontSize: 14, textAlign: "center", paddingLeft: 30, paddingRight: 30 },
+  changeText: {
+    color: "#ffd700",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  lockedBlock: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  lockedText: {
+    color: "#b8b8d0",
+    fontSize: 14,
+    textAlign: "center",
+    paddingLeft: 30,
+    paddingRight: 30,
+  },
   unlockButton: {
     marginHorizontal: 10,
     marginTop: 12,
