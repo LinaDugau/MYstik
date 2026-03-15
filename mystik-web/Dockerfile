@@ -1,69 +1,36 @@
-# Многоэтапная сборка для оптимизации размера образа
+# Оптимизированный Dockerfile для продакшена с исправленным сервером
 
-# Этап 1: Сборка фронтенда
-FROM node:18-alpine AS frontend-builder
+FROM node:24-slim AS base
+
+# Устанавливаем системные зависимости
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создаем пользователя для безопасности
+RUN groupadd --gid 2000 app && \
+    useradd --uid 2000 --gid 2000 -m -s /bin/bash app
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем корневой package.json
-COPY package*.json ./
-RUN npm install --legacy-peer-deps --only=production
+# Копируем все файлы проекта
+COPY --chown=app:app . .
 
-# Копируем файлы веб-приложения
-COPY mystik-web/package*.json ./mystik-web/
-COPY mystik-web/tsconfig*.json ./mystik-web/
-COPY mystik-web/vite.config.ts ./mystik-web/
-COPY mystik-web/index.html ./mystik-web/
-COPY mystik-web/src ./mystik-web/src/
-
-# Устанавливаем зависимости и собираем фронтенд
-WORKDIR /app/mystik-web
-RUN npm install --legacy-peer-deps
-RUN npm run build
-
-# Этап 2: Подготовка сервера
-FROM node:18-alpine AS server-builder
-
-WORKDIR /app/mystik-web/server
-
-# Копируем серверные файлы
-COPY mystik-web/server/package*.json ./
-RUN npm install --legacy-peer-deps --only=production
-
-# Этап 3: Финальный образ
-FROM node:18-alpine AS production
-
-# Устанавливаем curl для healthcheck
-RUN apk add --no-cache curl
-
+# Переходим в директорию веб-приложения
 WORKDIR /app/mystik-web
 
-# Копируем собранный фронтенд
-COPY --from=frontend-builder /app/mystik-web/dist ./dist
+# Устанавливаем зависимости и собираем проект
+RUN npm install --legacy-peer-deps && \
+    npx tsc -b && \
+    npx vite build && \
+    cd server && \
+    npm install --legacy-peer-deps && \
+    npm run migrate
 
-# Копируем серверные файлы и зависимости
-COPY --from=server-builder /app/mystik-web/server ./server
-COPY mystik-web/server/*.js ./server/
-COPY mystik-web/server/data ./server/data
-
-# Копируем package.json для команды запуска
-COPY mystik-web/package.json ./
-
-# Создаем пользователя для безопасности
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S mystik -u 1001
-
-# Устанавливаем права на файлы
-RUN chown -R mystik:nodejs /app/mystik-web
-USER mystik
-
-# Выполняем миграцию базы данных
-WORKDIR /app/mystik-web/server
-RUN npm run migrate
-
-# Возвращаемся в основную директорию
-WORKDIR /app/mystik-web
+# Переключаемся на непривилегированного пользователя
+USER app
 
 # Открываем порт
 EXPOSE 8000
@@ -72,5 +39,9 @@ EXPOSE 8000
 ENV NODE_ENV=production
 ENV PORT=8000
 
-# Запускаем сервер
+# Health check для проверки состояния
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health || exit 1
+
+# Запускаем production сервер
 CMD ["npm", "start"]

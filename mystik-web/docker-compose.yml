@@ -2,20 +2,47 @@ version: '3.8'
 
 services:
   mystik-web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mystik-web-app
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    networks:
+      mystik-network:
+        ipv4_address: 192.168.0.4
     environment:
       - NODE_ENV=production
       - PORT=8000
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=https://linadugau-mystik-39d3.twc1.net
     volumes:
-      # Монтируем папку с базой данных для сохранения данных
-      - ./server/data:/app/mystik-web/server/data
-    restart: unless-stopped
+      # Персистентное хранение базы данных
+      - mystik-db:/app/mystik-web/server/data
+      # Логи приложения
+      - mystik-logs:/app/mystik-web/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mystik.rule=Host(`linadugau-mystik-39d3.twc1.net`)"
+      - "traefik.http.routers.mystik.tls=true"
+      - "traefik.http.services.mystik.loadbalancer.server.port=8000"
+
+networks:
+  mystik-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
+          gateway: 192.168.0.1
+
+volumes:
+  mystik-db:
+    driver: local
+  mystik-logs:
+    driver: local
