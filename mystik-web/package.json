@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:check": "npx tsc -b && vite build",
+    "build": "npx tsc --noEmit && vite build",
+    "build:no-check": "vite build",
     "preview": "vite preview",
     "start": "cd server && npm start",
     "start:full": "npm run serve:static & cd server && npm start",
