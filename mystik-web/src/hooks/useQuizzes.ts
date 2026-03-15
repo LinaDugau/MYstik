@@ -28,6 +28,21 @@ export function useQuizzes() {
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/quizzes`);
+      
+      console.log('Quizzes API response status:', response.status);
+      console.log('Quizzes API response headers:', response.headers);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Expected JSON but got:', text.substring(0, 200));
+        throw new Error(`Expected JSON but got: ${contentType}`);
+      }
+      
       const data = await response.json();
 
       if (data.ok) {

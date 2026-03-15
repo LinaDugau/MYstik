@@ -303,7 +303,10 @@ app.put('/api/user/:id', (req, res) => {
 app.get('/api/quizzes', (req, res) => {
   try {
     const db = getDatabase();
+    console.log('Getting quizzes from database...');
+    
     const quizzes = db.prepare('SELECT id, title, description, is_premium FROM quizzes').all();
+    console.log('Found quizzes:', quizzes.length);
     
     const formattedQuizzes = quizzes.reduce((acc, quiz) => {
       acc[quiz.id] = {
@@ -488,7 +491,10 @@ app.post('/api/user/:id/change-password', (req, res) => {
 app.get('/api/tarot/spreads', (req, res) => {
   try {
     const db = getDatabase();
+    console.log('Getting tarot spreads from database...');
+    
     const spreads = db.prepare('SELECT * FROM tarot_spreads ORDER BY card_count ASC').all();
+    console.log('Found tarot spreads:', spreads.length);
     
     const formattedSpreads = spreads.map(spread => ({
       id: spread.id,
