@@ -5,7 +5,6 @@ import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useDailyCard } from '@/hooks/useDailyCard';
 import { useTarotReadings } from '@/hooks/useTarotReading';
 import { useTarotSpreads, useTarotCards, useTarotReading, TarotCard, TarotSpread } from '@/hooks/useTarotAPI';
-import { TAROT_CARDS } from '@/constants/tarot'; // Для карты дня
 
 interface ReadingResult {
   spread: TarotSpread;
