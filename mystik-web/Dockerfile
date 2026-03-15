@@ -71,4 +71,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=180s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
 # Запуск с детальным логированием и проверкой файлов
-CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo 'Node version:' && node --version && echo 'NPM version:' && npm --version && echo 'Working directory:' && pwd && echo 'Checking dist directory:' && ls -la dist/ && echo 'Files in server:' && ls -la server/ && echo 'Starting production server...' && cd server && node production-server.js"]
+CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo 'Node version:' && node --version && echo 'NPM version:' && npm --version && echo 'Working directory:' && pwd && echo 'Checking dist directory:' && ls -la dist/ && echo 'Files in server:' && ls -la server/ && echo 'Starting simple server...' && cd server && node simple-server.js"]

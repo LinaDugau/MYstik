@@ -62,6 +62,35 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Simple ping endpoint for debugging
+app.get('/ping', (req, res) => {
+  console.log('🏓 Ping request received');
+  res.json({ 
+    ok: true, 
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    port: PORT
+  });
+});
+
+// Server test page
+app.get('/server-test', (req, res) => {
+  try {
+    const testPath = path.join(__dirname, 'test.html');
+    console.log('📄 Serving server test page from:', testPath);
+    
+    if (!existsSync(testPath)) {
+      console.error('❌ ERROR: test.html not found at:', testPath);
+      return res.status(404).send('test.html not found');
+    }
+    
+    res.sendFile(testPath);
+  } catch (error) {
+    console.error('❌ Error serving test.html:', error);
+    res.status(404).send('Test file not found');
+  }
+});
+
 // Import and use main server routes - REMOVED to avoid conflicts
 // The API routes are defined directly in this file to ensure proper order
 
@@ -829,11 +858,32 @@ import('./db.js').then(({ initDatabase }) => {
   console.log('🗄️  Initializing database...');
   initDatabase();
   
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Production server running at http://0.0.0.0:${PORT}`);
+    console.log(`🌐 External access: http://localhost:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🧪 Test static: http://localhost:${PORT}/test-static`);
     console.log(`🎯 API endpoints ready!`);
+    console.log(`📁 Serving static files from: ${path.join(__dirname, '..', 'dist')}`);
   });
+  
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('🛑 SIGTERM received, shutting down gracefully...');
+    server.close(() => {
+      console.log('✅ Server closed');
+      process.exit(0);
+    });
+  });
+  
+  process.on('SIGINT', () => {
+    console.log('🛑 SIGINT received, shutting down gracefully...');
+    server.close(() => {
+      console.log('✅ Server closed');
+      process.exit(0);
+    });
+  });
+  
 }).catch(err => {
   console.error('❌ Failed to initialize database:', err);
   process.exit(1);

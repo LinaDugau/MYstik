@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .status {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Mystik Server Test</h1>
+    
+    <div class="status">
+        <h2>✅ Server Status</h2>
+        <p>Если вы видите эту страницу, сервер работает!</p>
+        <p><strong>Время:</strong> <span id="time"></span></p>
+        <p><strong>URL:</strong> <span id="url"></span></p>
+    </div>
+
+    <div class="status">
+        <h2>🔗 Полезные ссылки</h2>
+        <ul>
+            <li><a href="/api/health" style="color: #4CAF50;">Health Check API</a></li>
+            <li><a href="/ping" style="color: #4CAF50;">Ping Test</a></li>
+            <li><a href="/test-static" style="color: #4CAF50;">Static Files Test</a></li>
+            <li><a href="/" style="color: #4CAF50;">Main App</a></li>
+        </ul>
+    </div>
+
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+        document.getElementById('url').textContent = window.location.href;
+        
+        // Test API connectivity
+        fetch('/ping')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ping successful:', data);
+            })
+            .catch(error => {
+                console.error('Ping failed:', error);
+            });
+    </script>
+</body>
+</html>
