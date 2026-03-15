@@ -1487,12 +1487,19 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
 
 // Отдача статических файлов веб-приложения (после всех API роутов)
 const distPath = path.join(__dirname, '..', 'dist');
-try {
-  app.use(express.static(distPath));
-  console.log('Serving static files from:', distPath);
-} catch (error) {
-  console.log('No static files found, serving API only');
-}
+
+// ВАЖНО: Исключаем папку /api из статических файлов
+app.use(express.static(distPath, {
+  index: false, // Не обслуживать index.html автоматически
+  setHeaders: (res, path) => {
+    // Не кешировать API запросы
+    if (path.includes('/api/')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
+
+console.log('Serving static files from:', distPath);
 
 // Глобальная обработка ошибок для API
 app.use('/api/*', (err, req, res, next) => {

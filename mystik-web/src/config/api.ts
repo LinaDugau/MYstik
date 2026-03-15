@@ -1,10 +1,15 @@
 // API Configuration for Web App
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 
+// Remove trailing slash from VITE_API_URL if present
+const rawApiUrl = (import.meta as any).env?.VITE_API_URL;
+const cleanApiUrl = rawApiUrl ? rawApiUrl.replace(/\/$/, '') : null;
+
+const API_BASE_URL = cleanApiUrl || 
   ((import.meta as any).env?.DEV ? 'http://localhost:3001' : 'https://linadugau-mystik-39d3.twc1.net');
 
 // Логирование для отладки
 console.log('API_BASE_URL:', API_BASE_URL);
-console.log('VITE_API_URL:', (import.meta as any).env?.VITE_API_URL);
+console.log('VITE_API_URL (raw):', rawApiUrl);
+console.log('VITE_API_URL (clean):', cleanApiUrl);
 console.log('DEV mode:', (import.meta as any).env?.DEV);
 
 export const API_ENDPOINTS = {
