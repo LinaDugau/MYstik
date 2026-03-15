@@ -6,6 +6,12 @@ function getApiBaseUrl(): string {
   // Продакшен URL - ваш деплой
   const PRODUCTION_API_URL = 'https://linadugau-mystik-39d3.twc1.net';
   
+  // ВСЕГДА используем продакшен URL (деплой)
+  // Если нужно тестировать с локальным сервером, раскомментируйте код ниже
+  return PRODUCTION_API_URL;
+  
+  /* Для локальной разработки раскомментируйте этот блок:
+  
   // В продакшене используем деплой URL
   if (!__DEV__) {
     return PRODUCTION_API_URL;
@@ -20,6 +26,7 @@ function getApiBaseUrl(): string {
   
   // Fallback на localhost для локальной разработки
   return 'http://localhost:8080';
+  */
 }
 
 export const API_BASE_URL = getApiBaseUrl();
