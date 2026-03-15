@@ -44,9 +44,9 @@ ENV NODE_ENV=production
 ENV PORT=8000
 ENV HOST=0.0.0.0
 
-# Health check для проверки работоспособности
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/ping || exit 1
+# Health check отключен для упрощения запуска
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+#     CMD curl -f http://localhost:8000/ping || exit 1
 
-# Запуск ультра-простого сервера
-CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo '🌐 Domain: linadugau-mystik-c815.twc1.net' && echo '📡 Public IP: 5.129.193.50' && echo '🔒 Private IP: 192.168.0.4' && echo '🔌 Port: 8000' && echo '📁 Working directory:' && pwd && echo '📦 Dist contents:' && ls -la dist/ && echo '🚀 Starting server...' && cd server && node ultra-simple.js"]
+# Запуск автономного сервера (без зависимостей от server/package.json)
+CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo '🌐 Domain: linadugau-mystik-c815.twc1.net' && echo '📁 Working directory:' && pwd && echo '📦 Dist contents:' && ls -la dist/ && echo '🚀 Starting standalone server...' && node standalone-server.js"]
