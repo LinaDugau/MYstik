@@ -1,4 +1,4 @@
-# Оптимизированный Dockerfile для продакшена с исправленным сервером
+# Dockerfile для Mystik Web - исправленная структура проекта
 
 FROM node:24-slim AS base
 
@@ -15,11 +15,13 @@ RUN groupadd --gid 2000 app && \
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем все файлы проекта
-COPY --chown=app:app . .
-
-# Переходим в директорию веб-приложения
-WORKDIR /app/mystik-web
+# Копируем файлы проекта (из корня репозитория в контейнер)
+COPY --chown=app:app package*.json ./
+COPY --chown=app:app tsconfig*.json ./
+COPY --chown=app:app vite.config.ts ./
+COPY --chown=app:app index.html ./
+COPY --chown=app:app src ./src/
+COPY --chown=app:app server ./server/
 
 # Устанавливаем зависимости и собираем проект
 RUN npm install --legacy-peer-deps && \

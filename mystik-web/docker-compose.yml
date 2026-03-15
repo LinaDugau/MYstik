@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mystik-web:
     build:
-      context: .
+      context: .  # Контекст сборки - текущая директория (mystik-web)
       dockerfile: Dockerfile
     container_name: mystik-web-app
     restart: unless-stopped
@@ -18,9 +18,9 @@ services:
       - VITE_API_URL=https://linadugau-mystik-39d3.twc1.net
     volumes:
       # Персистентное хранение базы данных
-      - mystik-db:/app/mystik-web/server/data
+      - mystik-db:/app/server/data
       # Логи приложения
-      - mystik-logs:/app/mystik-web/logs
+      - mystik-logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
