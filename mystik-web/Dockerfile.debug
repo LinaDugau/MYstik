@@ -1,0 +1,61 @@
+# Dockerfile с расширенной диагностикой для отладки проблем
+
+FROM node:24-slim
+
+# Устанавливаем системные зависимости
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    procps \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Рабочая директория
+WORKDIR /app
+
+# Копируем package.json для кеширования зависимостей
+COPY package*.json ./
+RUN npm install --legacy-peer-deps && \
+    npm audit fix --force || true
+
+# Копируем остальные файлы
+COPY . .
+
+# Собираем проект с подробным выводом
+RUN echo "🔨 Сборка фронтенда..." && \
+    npm run build && \
+    echo "✅ Фронтенд собран" && \
+    ls -la dist/
+
+# Настраиваем сервер с диагностикой
+RUN echo "🔧 Настройка сервера..." && \
+    cd server && \
+    npm install --legacy-peer-deps && \
+    npm audit fix --force || true && \
+    echo "🗄️ Выполнение миграции..." && \
+    npm run migrate && \
+    echo "🔍 Проверка базы данных..." && \
+    ls -la data/ && \
+    echo "✅ Сервер настроен"
+
+# Создаем пользователя для безопасности
+RUN groupadd --gid 2000 app && \
+    useradd --uid 2000 --gid 2000 -m -s /bin/bash app && \
+    chown -R app:app /app
+
+# Переключаемся на непривилегированного пользователя
+USER app
+
+# Открываем порт
+EXPOSE 8000
+
+# Переменные окружения
+ENV NODE_ENV=production
+ENV PORT=8000
+
+# Расширенный health check
+HEALTHCHECK --interval=30s --timeout=15s --start-period=90s --retries=5 \
+    CMD curl -f http://localhost:8000/api/health || (echo "Health check failed" && ps aux && netstat -tlnp && exit 1)
+
+# Запуск с диагностикой
+CMD ["sh", "-c", "echo '🚀 Запуск Mystik Web Server...' && echo 'Диагностика:' && cd server && npm run debug && echo 'Запуск сервера:' && npm start"]

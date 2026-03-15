@@ -14,7 +14,8 @@
     "migrate:bun": "bun migrate-full-quizzes.js",
     "build": "echo 'No build step required'",
     "verify": "node verify-startup.js",
-    "test-server": "node test-server.js"
+    "test-server": "node test-server.js",
+    "debug": "node debug-startup.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

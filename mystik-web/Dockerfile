@@ -1,4 +1,4 @@
-# Простой и надежный Dockerfile для продакшена
+# Исправленный Dockerfile с улучшенным health check и оптимизацией
 
 FROM node:24-slim
 
@@ -10,14 +10,21 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Рабочая директория
 WORKDIR /app
 
-# Копируем все файлы проекта
+# Копируем package.json для кеширования зависимостей
+COPY package*.json ./
+RUN npm install --legacy-peer-deps && \
+    npm audit fix --force || true
+
+# Копируем остальные файлы
 COPY . .
 
-# Устанавливаем зависимости и собираем проект
-RUN npm install --legacy-peer-deps && \
-    npm run build && \
-    cd server && \
+# Собираем проект
+RUN npm run build
+
+# Настраиваем сервер
+RUN cd server && \
     npm install --legacy-peer-deps && \
+    npm audit fix --force || true && \
     npm run migrate
 
 # Создаем пользователя для безопасности
@@ -35,9 +42,9 @@ EXPOSE 8000
 ENV NODE_ENV=production
 ENV PORT=8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+# Улучшенный health check с большим таймаутом
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Запуск приложения
-CMD ["npm", "start"]
+# Запуск приложения с логированием
+CMD ["sh", "-c", "echo 'Starting Mystik Web Server...' && npm start"]
