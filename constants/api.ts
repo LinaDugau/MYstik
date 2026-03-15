@@ -3,10 +3,10 @@ import Constants from 'expo-constants';
 
 // Определяем базовый URL в зависимости от окружения
 function getApiBaseUrl(): string {
-  // Продакшен URL (замените на ваш Fly.io URL после деплоя)
-  const PRODUCTION_API_URL = 'https://your-app-name.fly.dev';
+  // Продакшен URL - ваш деплой
+  const PRODUCTION_API_URL = 'https://linadugau-mystik-39d3.twc1.net';
   
-  // В продакшене используем Fly.io URL
+  // В продакшене используем деплой URL
   if (!__DEV__) {
     return PRODUCTION_API_URL;
   }
