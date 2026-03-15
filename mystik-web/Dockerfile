@@ -1,35 +1,29 @@
-# Dockerfile для Mystik Web - исправленная структура проекта
+# Простой и надежный Dockerfile для продакшена
 
-FROM node:24-slim AS base
+FROM node:24-slim
 
-# Устанавливаем системные зависимости
+# Устанавливаем curl для health check
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Создаем пользователя для безопасности
-RUN groupadd --gid 2000 app && \
-    useradd --uid 2000 --gid 2000 -m -s /bin/bash app
-
-# Устанавливаем рабочую директорию
+# Рабочая директория
 WORKDIR /app
 
-# Копируем файлы проекта (из корня репозитория в контейнер)
-COPY --chown=app:app package*.json ./
-COPY --chown=app:app tsconfig*.json ./
-COPY --chown=app:app vite.config.ts ./
-COPY --chown=app:app index.html ./
-COPY --chown=app:app src ./src/
-COPY --chown=app:app server ./server/
+# Копируем все файлы проекта
+COPY . .
 
 # Устанавливаем зависимости и собираем проект
 RUN npm install --legacy-peer-deps && \
-    npx tsc -b && \
-    npx vite build && \
+    npm run build && \
     cd server && \
     npm install --legacy-peer-deps && \
     npm run migrate
+
+# Создаем пользователя для безопасности
+RUN groupadd --gid 2000 app && \
+    useradd --uid 2000 --gid 2000 -m -s /bin/bash app && \
+    chown -R app:app /app
 
 # Переключаемся на непривилегированного пользователя
 USER app
@@ -37,13 +31,13 @@ USER app
 # Открываем порт
 EXPOSE 8000
 
-# Устанавливаем переменные окружения
+# Переменные окружения
 ENV NODE_ENV=production
 ENV PORT=8000
 
-# Health check для проверки состояния
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Запускаем production сервер
+# Запуск приложения
 CMD ["npm", "start"]
