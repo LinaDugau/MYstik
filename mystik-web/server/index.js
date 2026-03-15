@@ -40,24 +40,35 @@ if (process.env.CORS_ORIGINS) {
 
 app.use(cors({
   origin: (origin, callback) => {
+    console.log('CORS check for origin:', origin);
+    
     // Разрешаем запросы без origin (мобильные приложения)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('No origin - allowing');
+      return callback(null, true);
+    }
     
     // Проверяем разрешенные origins
     const isAllowed = allowedOrigins.some(allowedOrigin => {
       if (typeof allowedOrigin === 'string') {
-        return origin === allowedOrigin;
+        const match = origin === allowedOrigin;
+        if (match) console.log('String match:', allowedOrigin);
+        return match;
       }
       if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
+        const match = allowedOrigin.test(origin);
+        if (match) console.log('Regex match:', allowedOrigin);
+        return match;
       }
       return false;
     });
     
     if (isAllowed) {
+      console.log('Origin allowed:', origin);
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);
+      console.log('Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -71,6 +82,11 @@ app.use(express.json());
 // Логирование запросов для отладки
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Query:', JSON.stringify(req.query, null, 2));
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+  }
   next();
 });
 
@@ -1477,6 +1493,12 @@ try {
 } catch (error) {
   console.log('No static files found, serving API only');
 }
+
+// Глобальная обработка ошибок для API
+app.use('/api/*', (err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(500).json({ ok: false, error: 'Внутренняя ошибка сервера' });
+});
 
 // SPA fallback - отдаем index.html для всех не-API роутов
 app.get('*', (req, res) => {
