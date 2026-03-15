@@ -9,6 +9,7 @@ import {
   Alert,
   FlatList,
   useWindowDimensions,
+  type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Lock, RefreshCw, ArrowLeft } from "lucide-react-native";
@@ -18,7 +19,7 @@ import { useTarotReadings } from "@/hooks/useTarotReading";
 import { router } from "expo-router";
 import { TAROT_CARDS, TAROT_SPREADS, TarotCard, TarotSpread } from "@/constants/tarot";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
+import { useDatabase } from "@/hooks/useDatabase"; 
 
 interface ReadingResult {
   spread: TarotSpread;
@@ -29,7 +30,7 @@ export default function TarotScreen() {
   const { isPremium, cardBack } = useSubscription();
   const { card: dailyCard, isNewDay, drawDailyCard } = useDailyCard();
   const { readingsToday, canRead, performReading } = useTarotReadings();
-  const { logTarotClick } = useDatabase(); // Добавляем хук
+  const { logTarotClick } = useDatabase(); 
   const [currentView, setCurrentView] = useState<'spreads' | 'reading'>('spreads');
   const [currentReading, setCurrentReading] = useState<ReadingResult | null>(null);
   const [flippedCards, setFlippedCards] = useState<boolean[]>([]);
@@ -37,15 +38,30 @@ export default function TarotScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  const cardBackStyles = {
+  const cardBackStyles: Record<string, readonly [ColorValue, ...ColorValue[]]> = {
     purple: ["#4a148c", "#7b1fa2", "#9c27b0"],
     gold: ["#ffd700", "#ffed4e"],
     black: ["#1a1a2e", "#333"],
     red: ["#d32f2f", "#f44336"],
   };
+  const cardBackIconColor: Record<string, string> = {
+    purple: "#ffd700",
+    gold: "#1a1a2e",
+    black: "#ffd700",
+    red: "#fff",
+  };
+  const cardBackTextColor: Record<string, string> = {
+    purple: "#fff",
+    gold: "#1a1a2e",
+    black: "#fff",
+    red: "#fff",
+  };
+  const backColors = cardBackStyles[cardBack] ?? cardBackStyles.purple;
+  const backIconColor = cardBackIconColor[cardBack] ?? "#ffd700";
+  const backTextColor = cardBackTextColor[cardBack] ?? "#fff";
 
   const startReading = (spread: TarotSpread) => {
-    logTarotClick(spread.id); // Логируем клик по раскладу
+    logTarotClick(spread.id); 
     if (spread.isPremium && !isPremium) {
       Alert.alert(
         "Премиум функция",
@@ -169,11 +185,11 @@ export default function TarotScreen() {
                   <TouchableOpacity onPress={() => flipCard(index)} activeOpacity={0.9}>
                     <Animated.View style={[styles.card, animationStyles.front]}>
                       <LinearGradient
-                        colors={cardBackStyles[cardBack as keyof typeof cardBackStyles] || cardBackStyles.purple}
+                        colors={backColors}
                         style={styles.cardGradient}
                       >
-                        <Sparkles size={40} color="#ffd700" />
-                        <Text style={styles.cardBackTextSmall}>Нажмите</Text>
+                        <Sparkles size={40} color={backIconColor} />
+                        <Text style={[styles.cardBackTextSmall, { color: backTextColor }]}>Нажмите</Text>
                       </LinearGradient>
                     </Animated.View>
                     
