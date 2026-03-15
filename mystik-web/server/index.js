@@ -68,14 +68,11 @@ app.use(cors({
 
 app.use(express.json());
 
-// Отдача статических файлов веб-приложения (если есть)
-const distPath = path.join(__dirname, '..', 'dist');
-try {
-  app.use(express.static(distPath));
-  console.log('Serving static files from:', distPath);
-} catch (error) {
-  console.log('No static files found, serving API only');
-}
+// Логирование запросов для отладки
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -1465,6 +1462,15 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
     res.status(500).json({ ok: false, error: 'Внутренняя ошибка сервера' });
   }
 });
+
+// Отдача статических файлов веб-приложения (после всех API роутов)
+const distPath = path.join(__dirname, '..', 'dist');
+try {
+  app.use(express.static(distPath));
+  console.log('Serving static files from:', distPath);
+} catch (error) {
+  console.log('No static files found, serving API only');
+}
 
 // SPA fallback - отдаем index.html для всех не-API роутов
 app.get('*', (req, res) => {
