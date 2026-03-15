@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
+    "start": "node production-server.js",
+    "start:old": "node index.js",
     "start:bun": "bun index.js",
     "dev": "node --watch index.js",
     "dev:bun": "bun --watch index.js",
