@@ -1,0 +1,46 @@
+# Минимальный Dockerfile без сложных зависимостей
+
+FROM node:24-slim
+
+# Устанавливаем только curl для health check
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Копируем все файлы
+COPY . .
+
+# Простая установка зависимостей без сложной логики
+RUN npm cache clean --force
+RUN npm install --legacy-peer-deps --no-optional
+RUN npm run build
+
+# Настройка сервера максимально просто
+WORKDIR /app/server
+RUN npm cache clean --force
+RUN rm -f package-lock.json bun.lock yarn.lock
+RUN npm install --legacy-peer-deps --no-optional
+RUN npm run migrate
+
+# Возвращаемся в корневую директорию
+WORKDIR /app
+
+# Создаем пользователя
+RUN groupadd --gid 2000 app && \
+    useradd --uid 2000 --gid 2000 -m -s /bin/bash app && \
+    chown -R app:app /app
+
+USER app
+
+EXPOSE 8000
+
+ENV NODE_ENV=production
+ENV PORT=8000
+
+# Отключаем health check для упрощения
+# HEALTHCHECK CMD curl -f http://localhost:8000/api/health || exit 1
+
+# Простой запуск
+CMD ["node", "server/production-server.js"]

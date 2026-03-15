@@ -1,9 +1,16 @@
 # Node modules
 node_modules
 server/node_modules
-../node_modules
 
-# Build artifacts
+# Lock files (КРИТИЧНО - могут вызывать конфликты)
+package-lock.json
+server/package-lock.json
+bun.lock
+server/bun.lock
+yarn.lock
+server/yarn.lock
+
+# Build artifacts (будут пересобраны в контейнере)
 dist
 .vite
 
@@ -36,7 +43,7 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage directory
 coverage
 
 # Dependency directories
@@ -57,6 +64,22 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
-# Deployment files
+# Deployment and documentation files
 DEPLOYMENT.md
+DEPLOYMENT-FIX.md
+DEPLOYMENT-TROUBLESHOOTING.md
 README.md
+TROUBLESHOOTING.md
+DOCKER*.md
+HEALTH-CHECK-FIX.md
+QUICK-DEPLOY.md
+PLATFORM-CONFIG.md
+КАК_ЗАПУСТИТЬ.md
+*.backup
+clean-deps.sh
+test-deployment.js
+
+# Alternative Dockerfiles
+Dockerfile.minimal
+Dockerfile.simple
+Dockerfile.debug

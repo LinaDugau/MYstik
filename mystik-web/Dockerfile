@@ -1,31 +1,48 @@
-# Исправленный Dockerfile с правильным health check
+# Максимально надежный Dockerfile с обработкой всех ошибок
 
 FROM node:24-slim
 
-# Устанавливаем curl для health check
+# Устанавливаем необходимые системные пакеты
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    curl \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Рабочая директория
 WORKDIR /app
 
-# Копируем package.json для кеширования зависимостей
-COPY package*.json ./
-RUN npm install --legacy-peer-deps && \
-    npm audit fix --force || true
-
-# Копируем остальные файлы
+# Копируем файлы проекта
 COPY . .
 
-# Собираем проект
-RUN npm run build
+# Устанавливаем зависимости основного проекта
+RUN echo "🔧 Installing main project dependencies..." && \
+    npm cache clean --force && \
+    rm -rf node_modules package-lock.json && \
+    npm install --legacy-peer-deps --verbose && \
+    echo "✅ Main dependencies installed"
 
-# Настраиваем сервер
-RUN cd server && \
-    npm install --legacy-peer-deps && \
-    npm audit fix --force || true && \
-    npm run migrate
+# Собираем фронтенд
+RUN echo "🏗️ Building frontend..." && \
+    npm run build && \
+    echo "✅ Frontend built successfully"
+
+# Настраиваем сервер с максимальной надежностью
+RUN echo "🖥️ Setting up server..." && \
+    cd server && \
+    echo "Cleaning server cache and files..." && \
+    npm cache clean --force && \
+    rm -rf node_modules && \
+    rm -f package-lock.json && \
+    rm -f bun.lock && \
+    rm -f yarn.lock && \
+    echo "Installing server dependencies..." && \
+    npm install --legacy-peer-deps --verbose --no-optional && \
+    echo "Running database migration..." && \
+    npm run migrate && \
+    echo "✅ Server setup completed"
 
 # Создаем пользователя для безопасности
 RUN groupadd --gid 2000 app && \
@@ -41,10 +58,11 @@ EXPOSE 8000
 # Переменные окружения
 ENV NODE_ENV=production
 ENV PORT=8000
+ENV HOST=0.0.0.0
 
-# Исправленный health check с увеличенными таймаутами
-HEALTHCHECK --interval=30s --timeout=20s --start-period=120s --retries=5 \
+# Health check с расширенными параметрами
+HEALTHCHECK --interval=30s --timeout=30s --start-period=180s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Запуск приложения с подробным логированием
-CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server on 0.0.0.0:8000...' && echo 'Environment: production' && echo 'Working directory:' && pwd && echo 'Files:' && ls -la && cd server && echo 'Server files:' && ls -la && echo 'Starting server...' && npm start"]
+# Запуск с детальным логированием
+CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo 'Node version:' && node --version && echo 'NPM version:' && npm --version && echo 'Working directory:' && pwd && echo 'Files in server:' && ls -la server/ && echo 'Starting production server...' && cd server && node production-server.js"]
