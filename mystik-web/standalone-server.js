@@ -38,11 +38,14 @@ const server = http.createServer((req, res) => {
   }
   
   if (req.url === '/api/health') {
+    console.log('✅ Health check request received');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
       ok: true, 
       status: 'healthy',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      port: PORT,
+      host: HOST
     }));
     return;
   }

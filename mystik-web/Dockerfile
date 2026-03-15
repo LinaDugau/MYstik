@@ -26,6 +26,13 @@ RUN echo "🔧 Installing dependencies..." && \
     npm run build && \
     echo "📁 Checking build output..." && \
     ls -la dist/ && \
+    echo "🖥️ Installing server dependencies..." && \
+    cd server && \
+    npm cache clean --force && \
+    rm -rf node_modules package-lock.json bun.lock && \
+    npm install --legacy-peer-deps && \
+    echo "🗄️ Running database migration..." && \
+    npm run migrate && \
     echo "✅ Build completed successfully"
 
 # Создаем пользователя для безопасности
@@ -44,9 +51,9 @@ ENV NODE_ENV=production
 ENV PORT=8000
 ENV HOST=0.0.0.0
 
-# Health check отключен для упрощения запуска
-# HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-#     CMD curl -f http://localhost:8000/ping || exit 1
+# Health check включен для платформы (путь: /api/health)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Запуск автономного сервера (без зависимостей от server/package.json)
-CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo '🌐 Domain: linadugau-mystik-c815.twc1.net' && echo '📁 Working directory:' && pwd && echo '📦 Dist contents:' && ls -la dist/ && echo '🚀 Starting standalone server...' && node standalone-server.js"]
+# Запуск production сервера с полным API (включая /api/health)
+CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo '🌐 Domain: linadugau-mystik-c815.twc1.net' && echo '📁 Working directory:' && pwd && echo '📦 Dist contents:' && ls -la dist/ && echo '🚀 Starting production server...' && cd server && node production-server.js"]
