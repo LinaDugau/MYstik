@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync, readdirSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +19,8 @@ console.log('🔌 PORT:', PORT);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://linadugau-mystik-39d3.twc1.net',
+  'https://linadugau-mystik-c815.twc1.net',
+  'https://linadugau-mystik-39d3.twc1.net', // старый URL для совместимости
   /^https:\/\/.*\.exp\.direct$/,
   /^https:\/\/.*\.ngrok\.io$/,
 ];
@@ -728,6 +730,24 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
   }
 });
 
+// Test static file endpoint
+app.get('/test-static', (req, res) => {
+  try {
+    const testPath = path.join(__dirname, '..', 'test-static.html');
+    console.log('📄 Serving test static file from:', testPath);
+    
+    if (!existsSync(testPath)) {
+      console.error('❌ ERROR: test-static.html not found at:', testPath);
+      return res.status(404).send('test-static.html not found');
+    }
+    
+    res.sendFile(testPath);
+  } catch (error) {
+    console.error('❌ Error serving test-static.html:', error);
+    res.status(404).send('Test file not found');
+  }
+});
+
 // Catch-all for other API routes - return 404 JSON
 app.all('/api/*', (req, res) => {
   console.log(`⚠️  API endpoint not found: ${req.method} ${req.path}`);
@@ -741,6 +761,16 @@ app.all('/api/*', (req, res) => {
 const distPath = path.join(__dirname, '..', 'dist');
 console.log('📁 Serving static files from:', distPath);
 
+// Проверяем существование dist директории
+if (!existsSync(distPath)) {
+  console.error('❌ ERROR: dist directory not found at:', distPath);
+  console.log('📁 Current directory contents:', readdirSync(__dirname));
+  console.log('📁 Parent directory contents:', readdirSync(path.join(__dirname, '..')));
+} else {
+  console.log('✅ dist directory found');
+  console.log('📁 dist contents:', readdirSync(distPath));
+}
+
 // Serve static files but NOT for /api routes
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {
@@ -748,7 +778,19 @@ app.use((req, res, next) => {
     return res.status(404).json({ ok: false, error: 'API endpoint not found' });
   }
   next();
-}, express.static(distPath, { index: false }));
+}, express.static(distPath, { 
+  index: false,
+  setHeaders: (res, filePath) => {
+    // Правильные MIME типы для статических файлов
+    if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html');
+    }
+  }
+}));
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
@@ -758,7 +800,13 @@ app.get('*', (req, res) => {
   
   try {
     const indexPath = path.join(distPath, 'index.html');
-    console.log('📄 Serving SPA index.html');
+    console.log('📄 Serving SPA index.html for path:', req.path);
+    
+    if (!existsSync(indexPath)) {
+      console.error('❌ ERROR: index.html not found at:', indexPath);
+      return res.status(404).send('index.html not found');
+    }
+    
     res.sendFile(indexPath);
   } catch (error) {
     console.error('❌ Error serving index.html:', error);

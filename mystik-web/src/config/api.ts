@@ -4,7 +4,7 @@ const rawApiUrl = (import.meta as any).env?.VITE_API_URL;
 const cleanApiUrl = rawApiUrl ? rawApiUrl.replace(/\/$/, '') : null;
 
 const API_BASE_URL = cleanApiUrl || 
-  ((import.meta as any).env?.DEV ? 'http://localhost:3001' : 'https://linadugau-mystik-39d3.twc1.net');
+  ((import.meta as any).env?.DEV ? 'http://localhost:3001' : 'https://linadugau-mystik-c815.twc1.net');
 
 // Логирование для отладки
 console.log('API_BASE_URL:', API_BASE_URL);

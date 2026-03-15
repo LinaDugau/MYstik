@@ -1,4 +1,4 @@
-# Максимально надежный Dockerfile с обработкой всех ошибок
+# Максимально надежный Dockerfile с проверкой сборки
 
 FROM node:24-slim
 
@@ -24,9 +24,15 @@ RUN echo "🔧 Installing main project dependencies..." && \
     npm install --legacy-peer-deps --verbose && \
     echo "✅ Main dependencies installed"
 
-# Собираем фронтенд
+# Собираем фронтенд с проверкой
 RUN echo "🏗️ Building frontend..." && \
     npm run build && \
+    echo "📁 Checking build output..." && \
+    ls -la dist/ && \
+    echo "� Checking index.html..." && \
+    ls -la dist/index.html && \
+    echo "📦 Checking assets..." && \
+    ls -la dist/assets/ && \
     echo "✅ Frontend built successfully"
 
 # Настраиваем сервер с максимальной надежностью
@@ -64,5 +70,5 @@ ENV HOST=0.0.0.0
 HEALTHCHECK --interval=30s --timeout=30s --start-period=180s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Запуск с детальным логированием
-CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo 'Node version:' && node --version && echo 'NPM version:' && npm --version && echo 'Working directory:' && pwd && echo 'Files in server:' && ls -la server/ && echo 'Starting production server...' && cd server && node production-server.js"]
+# Запуск с детальным логированием и проверкой файлов
+CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server...' && echo 'Node version:' && node --version && echo 'NPM version:' && npm --version && echo 'Working directory:' && pwd && echo 'Checking dist directory:' && ls -la dist/ && echo 'Files in server:' && ls -la server/ && echo 'Starting production server...' && cd server && node production-server.js"]
