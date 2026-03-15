@@ -4,6 +4,9 @@ export interface HoroscopeData {
   sign: string;
   text: string;
   date: string;
+  period?: string;
+  weekRange?: string;
+  monthRange?: string;
 }
 
 export function useHoroscope(zodiacSign: string, period: 'today' | 'week' | 'month' = 'today') {

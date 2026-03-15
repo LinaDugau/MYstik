@@ -1,16 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 
-interface QuizResult {
-  id?: string;
-  userId: string;
-  quizId: string;
-  answers: number[];
-  result: any;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export function useQuizResults(quizId: string) {
   const { user } = useAuth();
   const [result, setResult] = useState<any>(null);
