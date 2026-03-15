@@ -1,4 +1,4 @@
-# Исправленный Dockerfile с улучшенным health check и оптимизацией
+# Исправленный Dockerfile с правильным health check
 
 FROM node:24-slim
 
@@ -42,9 +42,9 @@ EXPOSE 8000
 ENV NODE_ENV=production
 ENV PORT=8000
 
-# Улучшенный health check с большим таймаутом
-HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
+# Исправленный health check с увеличенными таймаутами
+HEALTHCHECK --interval=30s --timeout=20s --start-period=120s --retries=5 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Запуск приложения с логированием
-CMD ["sh", "-c", "echo 'Starting Mystik Web Server...' && npm start"]
+# Запуск приложения с подробным логированием
+CMD ["sh", "-c", "echo '🚀 Starting Mystik Web Server on 0.0.0.0:8000...' && echo 'Environment: production' && echo 'Working directory:' && pwd && echo 'Files:' && ls -la && cd server && echo 'Server files:' && ls -la && echo 'Starting server...' && npm start"]

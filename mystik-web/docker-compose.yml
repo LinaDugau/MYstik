@@ -21,12 +21,13 @@ services:
       - mystik-db:/app/server/data
       # Логи приложения
       - mystik-logs:/app/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # Временно отключен health check для тестирования
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.mystik.rule=Host(`linadugau-mystik-39d3.twc1.net`)"

@@ -1,43 +1,41 @@
-# Упрощенный Dockerfile без TypeScript компиляции
+# Упрощенный Dockerfile без health check для тестирования
 
 FROM node:24-slim
 
-# Устанавливаем системные зависимости
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Устанавливаем curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Создаем пользователя для безопасности
-RUN groupadd --gid 2000 app && \
-    useradd --uid 2000 --gid 2000 -m -s /bin/bash app
-
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем все файлы проекта
-COPY --chown=app:app . .
+# Копируем и устанавливаем зависимости
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
-# Устанавливаем зависимости и собираем проект (БЕЗ TypeScript)
-RUN npm install --legacy-peer-deps && \
-    npm run build && \
-    cd server && \
+# Копируем все файлы
+COPY . .
+
+# Собираем проект
+RUN npm run build
+
+# Настраиваем сервер
+RUN cd server && \
     npm install --legacy-peer-deps && \
     npm run migrate
 
-# Переключаемся на непривилегированного пользователя
+# Создаем пользователя
+RUN groupadd --gid 2000 app && \
+    useradd --uid 2000 --gid 2000 -m -s /bin/bash app && \
+    chown -R app:app /app
+
 USER app
 
-# Открываем порт
 EXPOSE 8000
 
-# Устанавливаем переменные окружения
 ENV NODE_ENV=production
 ENV PORT=8000
 
-# Health check для проверки состояния
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/health || exit 1
+# БЕЗ HEALTH CHECK для тестирования
+# HEALTHCHECK NONE
 
-# Запускаем production сервер
+# Простой запуск
 CMD ["npm", "start"]

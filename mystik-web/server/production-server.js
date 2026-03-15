@@ -283,8 +283,8 @@ import('./db.js').then(({ initDatabase }) => {
   console.log('🗄️  Initializing database...');
   initDatabase();
   
-  app.listen(PORT, () => {
-    console.log(`✅ Production server running at http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Production server running at http://0.0.0.0:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🎯 API endpoints ready!`);
   });

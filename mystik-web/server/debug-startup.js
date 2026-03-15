@@ -91,19 +91,45 @@ console.log(`   Порт для запуска: ${port}`);
 
 // Проверяем доступность порта
 import { createServer } from 'http';
-const testServer = createServer();
 
-testServer.listen(port, (error) => {
+// Тестируем привязку к 0.0.0.0
+const testServer = createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Test server OK');
+});
+
+console.log('   Тестируем привязку к 0.0.0.0...');
+testServer.listen(port, '0.0.0.0', (error) => {
   if (error) {
-    console.log(`   ❌ Порт ${port} занят или недоступен: ${error.message}`);
+    console.log(`   ❌ Не удается привязаться к 0.0.0.0:${port}: ${error.message}`);
   } else {
-    console.log(`   ✅ Порт ${port} доступен`);
-    testServer.close();
+    console.log(`   ✅ Порт ${port} доступен на 0.0.0.0`);
+    
+    // Тестируем HTTP запрос
+    import('http').then(({ default: http }) => {
+      const req = http.request({
+        hostname: 'localhost',
+        port: port,
+        path: '/',
+        method: 'GET'
+      }, (res) => {
+        console.log(`   ✅ HTTP запрос успешен: ${res.statusCode}`);
+        testServer.close();
+        
+        console.log('\n' + '='.repeat(50));
+        console.log('📊 Диагностика завершена');
+        console.log('💡 Для запуска сервера используйте: npm start');
+        console.log('🔍 Сервер должен слушать на 0.0.0.0:' + port);
+      });
+      
+      req.on('error', (err) => {
+        console.log(`   ❌ HTTP запрос неудачен: ${err.message}`);
+        testServer.close();
+      });
+      
+      req.end();
+    });
   }
-  
-  console.log('\n' + '='.repeat(50));
-  console.log('📊 Диагностика завершена');
-  console.log('💡 Для запуска сервера используйте: npm start');
 });
 
 // Обработка ошибок
