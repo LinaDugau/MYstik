@@ -23,6 +23,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5175',
   'http://localhost:8081',
   'http://127.0.0.1:8081',
+  'https://linadugau-mystik-39d3.twc1.net',
   // Добавляем поддержку Expo tunnel URLs
   /^https:\/\/.*\.exp\.direct$/,
   /^https:\/\/.*\.ngrok\.io$/,

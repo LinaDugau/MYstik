@@ -1,6 +1,6 @@
 // API Configuration for Web App
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 
-  ((import.meta as any).env?.DEV ? 'http://localhost:3001' : '');
+  ((import.meta as any).env?.DEV ? 'http://localhost:3001' : 'https://linadugau-mystik-39d3.twc1.net');
 
 export const API_ENDPOINTS = {
   // Auth
