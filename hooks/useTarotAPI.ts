@@ -1,37 +1,39 @@
-import { useState, useEffect } from 'react';
-import { useAuthContext } from '@/providers/AuthProvider';
-import { API_BASE_URL } from '../constants/api';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/providers/AuthProvider";
+import type { TarotSpread } from "@/constants/tarot";
 
-export interface TarotCard {
+type TarotCardApi = {
   id: string;
   number: string;
   name: string;
   symbol: string;
   meaning: string;
-}
+};
 
-export interface TarotSpread {
-  id: string;
-  name: string;
-  description: string;
-  cardCount: number;
-  positions: string[];
-  isPremium: boolean;
-}
+type TarotInterpretationApi = {
+  position: string;
+  card: TarotCardApi;
+  interpretation: string;
+};
 
-export interface TarotReading {
+type TarotReadingApi = {
   id: string;
   spread: TarotSpread;
-  cards: TarotCard[];
-  interpretations: {
-    position: string;
-    card: TarotCard;
-    interpretation: string;
-  }[];
+  cards: (TarotCardApi & { position?: string })[];
+  interpretations: TarotInterpretationApi[];
   createdAt: string;
+};
+
+function getApiBase(): string {
+  const raw =
+    process.env.EXPO_PUBLIC_API_URL ||
+    process.env.EXPO_PUBLIC_API_BASE ||
+    process.env.EXPO_PUBLIC_BACKEND_URL ||
+    "";
+  const cleaned = raw.trim().replace(/\/$/, "");
+  return cleaned || "http://localhost:3001";
 }
 
-// Хук для получения раскладов
 export function useTarotSpreads() {
   const [spreads, setSpreads] = useState<TarotSpread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,17 +42,19 @@ export function useTarotSpreads() {
   useEffect(() => {
     const fetchSpreads = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/tarot/spreads`);
-        const data = await response.json();
-        
-        if (data.ok) {
-          setSpreads(data.spreads);
-        } else {
-          setError(data.error || 'Ошибка загрузки раскладов');
-        }
-      } catch (err) {
-        console.error('Error fetching tarot spreads:', err);
-        setError('Ошибка сети');
+        setLoading(true);
+        setError(null);
+        const apiBase = getApiBase();
+        console.log("[TAROT API DEBUG] fetching spreads:", `${apiBase}/api/tarot/spreads`);
+
+        const res = await fetch(`${apiBase}/api/tarot/spreads`);
+        const data = await res.json().catch(() => ({}));
+
+        if (data.ok) setSpreads(data.spreads);
+        else setError(data.error || "Ошибка загрузки раскладов");
+      } catch (e) {
+        console.error("[TAROT API DEBUG] fetchSpreads error:", e);
+        setError("Ошибка сети");
       } finally {
         setLoading(false);
       }
@@ -62,26 +66,27 @@ export function useTarotSpreads() {
   return { spreads, loading, error };
 }
 
-// Хук для получения карт
 export function useTarotCards() {
-  const [cards, setCards] = useState<TarotCard[]>([]);
+  const [cards, setCards] = useState<TarotCardApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/tarot/cards`);
-        const data = await response.json();
-        
-        if (data.ok) {
-          setCards(data.cards);
-        } else {
-          setError(data.error || 'Ошибка загрузки карт');
-        }
-      } catch (err) {
-        console.error('Error fetching tarot cards:', err);
-        setError('Ошибка сети');
+        setLoading(true);
+        setError(null);
+        const apiBase = getApiBase();
+        console.log("[TAROT API DEBUG] fetching cards:", `${apiBase}/api/tarot/cards`);
+
+        const res = await fetch(`${apiBase}/api/tarot/cards`);
+        const data = await res.json().catch(() => ({}));
+
+        if (data.ok) setCards(data.cards);
+        else setError(data.error || "Ошибка загрузки карт");
+      } catch (e) {
+        console.error("[TAROT API DEBUG] fetchCards error:", e);
+        setError("Ошибка сети");
       } finally {
         setLoading(false);
       }
@@ -93,27 +98,31 @@ export function useTarotCards() {
   return { cards, loading, error };
 }
 
-// Хук для создания гадания
-export function useTarotReading() {
-  const { user } = useAuthContext();
+export function useTarotReadingAPI() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createReading = async (spreadId: string, cardIds: string[]): Promise<TarotReading | null> => {
+  const createReading = async (spreadId: string, cardIds: string[]): Promise<TarotReadingApi | null> => {
     if (!user?.id) {
-      setError('Пользователь не авторизован');
+      setError("Пользователь не авторизован");
       return null;
     }
 
-    setLoading(true);
-    setError(null);
-
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tarot/reading`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      setLoading(true);
+      setError(null);
+      const apiBase = getApiBase();
+
+      console.log("[TAROT API DEBUG] createReading request:", {
+        userId: user.id,
+        spreadId,
+        cardIds,
+      });
+
+      const res = await fetch(`${apiBase}/api/tarot/reading`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
           spreadId,
@@ -121,17 +130,21 @@ export function useTarotReading() {
         }),
       });
 
-      const data = await response.json();
-
-      if (data.ok) {
-        return data.reading;
-      } else {
-        setError(data.error || 'Ошибка создания гадания');
-        return null;
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        console.log("[TAROT API DEBUG] createReading ok:", {
+          readingId: data.reading?.id,
+          interpretationsCount: data.reading?.interpretations?.length,
+        });
+        return data.reading as TarotReadingApi;
       }
-    } catch (err) {
-      console.error('Error creating tarot reading:', err);
-      setError('Ошибка сети');
+
+      setError(data.error || "Ошибка создания гадания");
+      console.warn("[TAROT API DEBUG] createReading failed:", { status: res.status, data });
+      return null;
+    } catch (e) {
+      console.error("[TAROT API DEBUG] createReading error:", e);
+      setError("Ошибка сети");
       return null;
     } finally {
       setLoading(false);
@@ -141,44 +154,3 @@ export function useTarotReading() {
   return { createReading, loading, error };
 }
 
-// Хук для получения гаданий пользователя
-export function useUserTarotReadings(date?: string) {
-  const { user } = useAuthContext();
-  const [readings, setReadings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchReadings = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        let url = `${API_BASE_URL}/api/user/${user.id}/tarot/readings`;
-        if (date) {
-          url += `?date=${date}`;
-        }
-
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (data.ok) {
-          setReadings(data.readings);
-        } else {
-          setError(data.error || 'Ошибка загрузки гаданий');
-        }
-      } catch (err) {
-        console.error('Error fetching user tarot readings:', err);
-        setError('Ошибка сети');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReadings();
-  }, [user?.id, date]);
-
-  return { readings, loading, error };
-}

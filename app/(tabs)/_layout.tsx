@@ -2,10 +2,13 @@ import { Tabs } from "expo-router";
 import { Home, Star, User, Sparkles, BookOpen } from "lucide-react-native";
 import { Platform } from "react-native";
 import { useDatabase } from "@/hooks/useDatabase";
+import React, { useEffect } from "react";
+import { router } from "expo-router";
+import { useAuth } from "@/providers/AuthProvider";
+import { View, ActivityIndicator } from "react-native";
 
-export default function TabsLayout() {
+function TabsLayoutInner() {
   const { logTabClick, deviceId } = useDatabase();
-
   return (
     <Tabs
       screenOptions={{
@@ -71,4 +74,30 @@ export default function TabsLayout() {
       />
     </Tabs>
   );
+}
+
+export default function TabsLayout() {
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/auth");
+    }
+  }, [isLoading, user]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a1a2e' }}>
+        <ActivityIndicator size="large" color="#ffd700" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    // Пока перенаправление на экран авторизации не завершилось, показываем фон приложения,
+    // чтобы не было «пустого» синего/белого экрана.
+    return <View style={{ flex: 1, backgroundColor: '#1a1a2e' }} />;
+  }
+
+  return <TabsLayoutInner />;
 }
