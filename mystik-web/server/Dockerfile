@@ -14,6 +14,7 @@ ENV PORT=3001
 
 EXPOSE 3001
 
-# Миграция БД при старте + запуск API
-CMD ["sh", "-c", "bun migrate.js && bun index.js"]
+# Инициализация/миграции БД при старте + наполнение базовых данных + запуск API
+# Важно: без docker volumes Timeweb контейнер может пересоздаваться, поэтому заполняем квизы при каждом старте.
+CMD ["sh", "-c", "bun migrate.js && bun migrate-full-quizzes.js && bun migrate-tarot-full.js && bun migrate-tarot-additional.js && bun index.js"]
 

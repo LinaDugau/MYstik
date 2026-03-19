@@ -8,8 +8,6 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3001"
-    volumes:
-      - mystik_backend_data:/app/data
     restart: unless-stopped
 
   web:
@@ -27,5 +25,3 @@ services:
       - "8000:80"
     restart: unless-stopped
 
-volumes:
-  mystik_backend_data:
