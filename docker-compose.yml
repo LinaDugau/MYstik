@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   backend:
     build:
@@ -16,7 +18,7 @@ services:
       dockerfile: Dockerfile
       args:
         # Встроится во фронт как base для запросов: ${VITE_API_URL}/api/...
-        VITE_API_URL: "https://linadugau-mystik-39d3.twc1.net"
+        VITE_API_URL: "https://linadugau-mystik-07e0.twc1.net"
     depends_on:
       - backend
     ports:
