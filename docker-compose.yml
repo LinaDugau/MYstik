@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: ./mystik-web/server
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+    volumes:
+      - mystik_backend_data:/app/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./mystik-web
+      dockerfile: Dockerfile
+      args:
+        # Встроится во фронт как base для запросов: ${VITE_API_URL}/api/...
+        VITE_API_URL: "https://linadugau-mystik-39d3.twc1.net"
+    depends_on:
+      - backend
+    ports:
+      # наружу публикуем порт 8000 (чтобы совпадало с вашим PORT=8000 на хостинге),
+      # внутри контейнер слушает 80.
+      - "8000:80"
+    restart: unless-stopped
+
+volumes:
+  mystik_backend_data:
