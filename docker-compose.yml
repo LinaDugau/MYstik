@@ -1,27 +1,51 @@
-version: "3.8"
-
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: mystik-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/mystik.sql:/docker-entrypoint-initdb.d/01-mystik.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
   backend:
     build:
-      context: ./mystik-web/server
+      context: ./server
       dockerfile: Dockerfile
-    environment:
-      NODE_ENV: production
-      PORT: "3001"
+    container_name: mystik-backend
     restart: unless-stopped
+    environment:
+      PORT: 3001
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    depends_on:
+      mysql:
+        condition: service_healthy
 
-  web:
+  frontend:
     build:
-      context: ./mystik-web
+      context: .
       dockerfile: Dockerfile
       args:
-        # Встроится во фронт как base для запросов: ${VITE_API_URL}/api/...
-        VITE_API_URL: "https://linadugau-mystik-07e0.twc1.net"
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: mystik-frontend
+    restart: unless-stopped
     depends_on:
       - backend
     ports:
-      # наружу публикуем порт 8000 (чтобы совпадало с вашим PORT=8000 на хостинге),
-      # внутри контейнер слушает 80.
-      - "8000:80"
-    restart: unless-stopped
+      - "${FRONTEND_PORT}:80"
 
+volumes:
+  mysql_data:
