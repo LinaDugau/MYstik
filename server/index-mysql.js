@@ -4,9 +4,10 @@ import bcrypt from 'bcryptjs';
 import * as cheerio from 'cheerio';
 import { initDatabase, getDatabase } from './db-mysql.js';
 
-await initDatabase();
-
 const app = express();
+
+/** Пока false — MySQL ещё не поднялся; иначе Timeweb увидит «нет порта» и будет рестартить контейнер */
+let dbReady = false;
 
 // CORS настройки
 app.use(cors({
@@ -17,6 +18,26 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Проверки платформы: порт должен слушаться до успешного коннекта к БД
+app.get('/', (_req, res) => {
+  res.json({ ok: true, service: 'mystik-api', dbReady });
+});
+
+app.get('/health', (_req, res) => {
+  res.json({ ok: true, dbReady });
+});
+
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') return next();
+  if (req.path.startsWith('/api') && !dbReady) {
+    return res.status(503).json({
+      ok: false,
+      error: 'Сервер подключается к базе данных, повторите через несколько секунд',
+    });
+  }
+  next();
+});
 
 const SALT_ROUNDS = 10;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1543,10 +1564,30 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://0.0.0.0:${PORT}`);
-  console.log(
-    `MySQL DB: ${process.env.MYSQL_HOST || 'localhost'}:${process.env.MYSQL_PORT || 3306}/${process.env.MYSQL_DATABASE || 'mystik'}`
-  );
+
+  (async () => {
+    const maxAttempts = 30;
+    const delayMs = 2000;
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        await initDatabase();
+        dbReady = true;
+        console.log('MySQL database initialized successfully');
+        console.log(
+          `MySQL DB: ${process.env.MYSQL_HOST || 'localhost'}:${process.env.MYSQL_PORT || 3306}/${process.env.MYSQL_DATABASE || 'mystik'}`
+        );
+        return;
+      } catch (err) {
+        console.error(`MySQL init attempt ${i + 1}/${maxAttempts}:`, err?.message || err);
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+    console.error(
+      'MySQL: не удалось подключиться после всех попыток. Проверь MYSQL_* и приватную сеть. /api/* отдаёт 503.'
+    );
+  })();
 });

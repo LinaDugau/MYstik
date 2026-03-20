@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "bun index-mysql.js",
-    "start-mysql": "bun index-mysql.js",
-    "dev": "bun --watch index-mysql.js",
-    "dev-mysql": "bun --watch index-mysql.js",
-    "test": "bun test-api.js"
+    "start": "node index-mysql.js",
+    "start-mysql": "node index-mysql.js",
+    "dev": "node --watch index-mysql.js",
+    "dev-mysql": "node --watch index-mysql.js",
+    "test": "node test-api.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
