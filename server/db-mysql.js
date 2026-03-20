@@ -5,14 +5,61 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Конфигурация MySQL - вы можете изменить эти параметры
+/**
+ * Timeweb / managed MySQL часто с --require_secure_transport=ON.
+ * Тогда без TLS клиент получает ER_SECURE_TRANSPORT_REQUIRED (3159).
+ * Включите MYSQL_SSL=false для локального MySQL без SSL.
+ */
+/**
+ * @returns {{ ssl: object | undefined, tlsLabel: string }}
+ */
+function sslOptionsFromEnv() {
+  const raw = (process.env.MYSQL_SSL || '').toLowerCase();
+  if (raw === '0' || raw === 'false' || raw === 'off') {
+    return { ssl: undefined, tlsLabel: 'no TLS' };
+  }
+
+  const rejectUnauthorized = process.env.MYSQL_SSL_REJECT_UNAUTHORIZED !== '0';
+
+  /** Явный путь из env или файл `ca.crt` рядом с этим модулем (репозиторий server/ca.crt) */
+  const caFromEnv = process.env.MYSQL_SSL_CA;
+  const defaultCa = path.join(__dirname, 'ca.crt');
+  const caPath = caFromEnv
+    ? path.isAbsolute(caFromEnv)
+      ? caFromEnv
+      : path.join(__dirname, caFromEnv)
+    : defaultCa;
+
+  if (fs.existsSync(caPath)) {
+    return {
+      ssl: {
+        ca: fs.readFileSync(caPath),
+        rejectUnauthorized,
+      },
+      tlsLabel: `TLS + CA (${path.basename(caPath)})`,
+    };
+  }
+
+  if (caFromEnv) {
+    console.warn('MYSQL_SSL_CA: файл не найден, TLS без CA:', caPath);
+  }
+
+  // Облачная БД без файла CA: шифрование, без проверки цепочки (fallback)
+  return {
+    ssl: { rejectUnauthorized: false },
+    tlsLabel: 'TLS (fallback, no CA file)',
+  };
+}
+
+// Конфигурация MySQL (без ssl — ключ добавляется в createPool только если нужен)
+const { ssl: MYSQL_SSL, tlsLabel: MYSQL_TLS_LABEL } = sslOptionsFromEnv();
 const MYSQL_CONFIG = {
   host: process.env.MYSQL_HOST || 'localhost',
-  port: process.env.MYSQL_PORT || 3306,
+  port: Number(process.env.MYSQL_PORT) || 3306,
   user: process.env.MYSQL_USER || 'root',
   password: process.env.MYSQL_PASSWORD || '',
   database: process.env.MYSQL_DATABASE || 'mystik',
-  charset: 'utf8mb4'
+  charset: 'utf8mb4',
 };
 
 let pool = null;
@@ -162,9 +209,10 @@ async function initDatabase() {
     // Создаем пул соединений
     pool = mysql.createPool({
       ...MYSQL_CONFIG,
+      ...(MYSQL_SSL ? { ssl: MYSQL_SSL } : {}),
       waitForConnections: true,
       connectionLimit: 10,
-      queueLimit: 0
+      queueLimit: 0,
     });
 
     // Проверяем соединение и инициализируем схему
@@ -172,7 +220,7 @@ async function initDatabase() {
     await initSchema(connection);
     connection.release();
 
-    console.log('MySQL database initialized successfully');
+    console.log('MySQL database initialized successfully', `(${MYSQL_TLS_LABEL})`);
     return pool;
   } catch (error) {
     console.error('Failed to initialize MySQL database:', error);

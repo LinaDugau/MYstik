@@ -1,19 +1,17 @@
-FROM oven/bun:1.1.22
+FROM node:24-slim
 
 WORKDIR /app
 
-# Копируем package.json в отдельный слой, чтобы кэшировать установку зависимостей
-COPY package.json ./
+COPY package.json package-lock.json* ./
 
+RUN npm install --omit=dev
+
+# В образ попадает и ca.crt (TLS к Timeweb MySQL); db-mysql.js подхватывает его автоматически.
 COPY . .
-
-RUN bun install --production
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
 
-# Запуск API в MySQL-режиме
-CMD ["bun", "index-mysql.js"]
-
+CMD ["node", "index-mysql.js"]
