@@ -21,3 +21,5 @@ services:
       - backend
     expose:
       - "80"
+    ports:
+      - "8080:80"
