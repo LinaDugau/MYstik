@@ -1576,7 +1576,7 @@ app.listen(PORT, '0.0.0.0', () => {
       try {
         await initDatabase();
         dbReady = true;
-        console.log('MySQL database initialized successfully');
+        // Детали TLS уже пишет db-mysql.js при initDatabase()
         console.log(
           `MySQL DB: ${process.env.MYSQL_HOST || 'localhost'}:${process.env.MYSQL_PORT || 3306}/${process.env.MYSQL_DATABASE || 'mystik'}`
         );
