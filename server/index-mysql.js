@@ -28,6 +28,15 @@ app.get('/health', (_req, res) => {
   res.json({ ok: true, dbReady });
 });
 
+// Timeweb / K8s часто бьют в /api или /api/health. До middleware! Иначе — 404 или 503 → рестарты и SIGTERM.
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ ok: true, service: 'mystik-api', dbReady });
+});
+
+app.get('/api', (_req, res) => {
+  res.status(200).json({ ok: true, service: 'mystik-api', dbReady });
+});
+
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return next();
   if (req.path.startsWith('/api') && !dbReady) {
@@ -1566,7 +1575,7 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
 
 const PORT = Number(process.env.PORT) || 3001;
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://0.0.0.0:${PORT}`);
 
   (async () => {
@@ -1590,4 +1599,9 @@ app.listen(PORT, '0.0.0.0', () => {
       'MySQL: не удалось подключиться после всех попыток. Проверь MYSQL_* и приватную сеть. /api/* отдаёт 503.'
     );
   })();
+});
+
+server.on('error', (err) => {
+  console.error('Server failed to listen:', err);
+  process.exit(1);
 });
