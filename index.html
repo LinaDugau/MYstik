@@ -8,8 +8,9 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- До React: задаёт window.__MYSTIK_API_URL__ для Timeweb Static (см. public/mystik-api-config.js) -->
-    <script src="/mystik-api-config.js"></script>
+    <!-- До React: задаёт window.__MYSTIK_API_URL__ для Timeweb Static (см. public/mystik-api-config.js).
+         cache-bust: конфиг не захеширован, браузер/CDN может закэшировать старую версию. -->
+    <script src="/mystik-api-config.js?v=2"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
