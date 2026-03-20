@@ -19,5 +19,5 @@ services:
         VITE_API_URL: ${VITE_API_URL}
     depends_on:
       - backend
-    ports:
-      - "8080:80"
+    expose:
+      - "80"
