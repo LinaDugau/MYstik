@@ -11,7 +11,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
 
-  app:
+  web:
     build:
       context: .
       dockerfile: Dockerfile
@@ -20,4 +20,4 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080"
+      - "18080:8080"
